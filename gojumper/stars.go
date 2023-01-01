@@ -11,27 +11,6 @@ import (
 	"strings"
 )
 
-type rawCoord struct {
-	X float64 `json:"x"`
-	Y float64 `json:"y"`
-	Z float64 `json:"z"`
-}
-
-type rawStar struct {
-	ID     int      `json:"id"`
-	Id64   int64    `json:"id64"`
-	Name   string   `json:"name"`
-	Coords rawCoord `json:"coords"`
-	Date   string   `json:"date"`
-}
-
-type Star struct {
-	ID          int    `json:"id"`
-	Name        string `json:"name"`
-	Star_coords Coord  `json:"star_coords"`
-	Neutron     bool   `json:"neutron"`
-}
-
 func starsfile_ok() bool {
 	filename := filepath.Join(".", *starsfile)
 
@@ -168,8 +147,34 @@ func find_closest(stars []Star, start_coords Coord, end_coords Coord) (start_sta
 	return startStar, endStar
 }
 
+// Load stars from the cached json file
 func find_systems_cached() []Star {
-	return nil
+	stars := make([]Star, 0)
+
+	// Check to see if the file exists, and if not, return the empty star list
+	if _, err := os.Stat("stars.json"); os.IsNotExist(err) {
+		return stars
+	}
+
+	// Open the file
+	file, err := os.Open("stars.json")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	// Read the file
+	decoder := json.NewDecoder(file)
+	for decoder.More() {
+		// var star Star
+		err := decoder.Decode(&stars)
+		if err != nil {
+			log.Fatal(err)
+		}
+		// stars = append(stars, star)
+	}
+
+	return stars
 }
 
 func find_systems_offline() []Star {

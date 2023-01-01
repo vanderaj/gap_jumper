@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 )
 
+const neutronfile = "neutron-stars.csv"
+
 func main() {
 	fmt.Println("gojumper v0.1.0")
 
@@ -22,29 +24,17 @@ func main() {
 
 	fmt.Println("Using offline mode. ")
 	if len(*starsfile) > 0 {
-		fmt.Println("Checking stars file: ", *starsfile)
+		fmt.Println("Checking systems file: ", *starsfile)
 		if starsfile_ok() {
-			fmt.Println("Stars file is ok.")
+			fmt.Println("Systems are ok.")
 		} else {
 			if starsfile_compressed() {
-				fmt.Println("Stars file is compressed. Uncompressing now...")
+				fmt.Println("Systems file is compressed. Uncompressing now...")
 				uncompress_starsfile()
 			} else {
-				fmt.Println("Stars file is not ok. Downloading a new one...")
+				fmt.Println("Systems file is not ok or missing. Downloading a new one...")
 				download_stars_file()
 			}
-		}
-	}
-
-	if *neutron_boosting {
-		fmt.Println("Neutron boosting is enabled.")
-		neutron_file_ok := neutron_file_ok()
-		if !neutron_file_ok {
-			fmt.Println("The neutron stars file is not available or is out of date.")
-			fmt.Println("Downloading the file now... This may take a while.")
-			download_neutron_file()
-		} else {
-			fmt.Println("Neutron file is up to date.")
 		}
 	}
 
@@ -60,6 +50,24 @@ func main() {
 		fmt.Println("Loading stars from ", *starsfile)
 		stars = find_systems_offline()
 
+		// 2. Merge neutron stars into the stars dict
+
+		if *neutron_boosting {
+			fmt.Println("Neutron boosting is enabled.")
+			neutron_file_ok := neutron_file_ok()
+			if !neutron_file_ok {
+				fmt.Println("The neutron stars file is not available or is out of date.")
+				fmt.Println("Downloading the file now... This may take a while.")
+				download_neutron_file()
+			} else {
+				fmt.Println("Neutron file is up to date.")
+			}
+			fmt.Println("Loading neutron stars from ", neutronfile)
+			neutron_stars := find_neutron_stars_offline(neutronfile)
+			fmt.Printf("Found %d neutron stars.\n", len(neutron_stars))
+			update_stars_with_neutrons(stars, neutron_stars)
+		}
+
 		// Serialize the stars dict to a file
 		starCachefile, _ := json.MarshalIndent(stars, "", " ")
 		_ = ioutil.WriteFile("stars.json", starCachefile, 0644)
@@ -68,9 +76,9 @@ func main() {
 
 	fmt.Printf("Completed reading stars. Found %d relevant stars.\n", len(stars))
 
-	// 2. Merge neutron stars into the stars dict
-	fmt.Println("Phase 2 - Loading and merging neutron stars.")
+	// 2. prepare for pathfinding
+	fmt.Println("Phase 2 - preparing for pathfinding")
 
-	// 3. Resolve a path
-	fmt.Println("Phase 3 - resolving a path")
+	// 3. Find a path
+	fmt.Println("Phase 3 - Find a path")
 }

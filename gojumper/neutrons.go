@@ -1,8 +1,13 @@
 package main
 
 import (
+	"bufio"
+	"fmt"
+	"log"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -42,7 +47,47 @@ func download_neutron_file() {
 // < neutron_stars > is the set with the id's of the systems that contain
 // neutron stars.
 func update_stars_with_neutrons(stars []Star, neutron_stars []Star) {
-	for _, star := range neutron_stars {
-		stars[star.ID].Neutron = true
+
+	var star Star
+	var neutron Star
+	var index int
+
+	for index, star = range stars {
+		for _, neutron = range neutron_stars {
+			if star.ID == neutron.ID {
+				fmt.Println("Found neutron star: ", star.Name)
+				stars[index].Neutron = true
+				break
+			}
+		}
 	}
+}
+
+func find_neutron_stars_offline(neutronfile string) []Star {
+
+	neutron_stars := make([]Star, 0)
+
+	// Open the file.
+	file, err := os.Open(neutronfile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer file.Close()
+
+	// Read the file line by line.
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		// Split the line into the different fields.
+		fields := strings.Split(line, ",")
+		id, err := strconv.Atoi(fields[1])
+		// take care of first line
+		if err != nil {
+			continue
+		}
+		neutron_stars = append(neutron_stars, Star{id, fields[2], Coord{0, 0, 0}, true})
+	}
+	return neutron_stars
 }
