@@ -4,6 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"time"
+
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 )
 
 const neutronfile = "neutron-stars.csv"
@@ -41,8 +45,9 @@ func main() {
 	// 1. Read the stars, placing them into a stars dict, which we will serialize to a file.
 
 	var stars []Star
+	start := time.Now()
 	if *cached {
-		fmt.Println("Loading stars from cache")
+		fmt.Println("Loading stars from cached stars.json")
 		stars = find_systems_cached()
 	}
 
@@ -50,31 +55,32 @@ func main() {
 		fmt.Println("Loading stars from ", *starsfile)
 		stars = find_systems_offline()
 
-		// 2. Merge neutron stars into the stars dict
-
-		if *neutron_boosting {
-			fmt.Println("Neutron boosting is enabled.")
-			neutron_file_ok := neutron_file_ok()
-			if !neutron_file_ok {
-				fmt.Println("The neutron stars file is not available or is out of date.")
-				fmt.Println("Downloading the file now... This may take a while.")
-				download_neutron_file()
-			} else {
-				fmt.Println("Neutron file is up to date.")
-			}
-			fmt.Println("Loading neutron stars from ", neutronfile)
-			neutron_stars := find_neutron_stars_offline(neutronfile)
-			fmt.Printf("Found %d neutron stars.\n", len(neutron_stars))
-			update_stars_with_neutrons(stars, neutron_stars)
-		}
-
-		// Serialize the stars dict to a file
+		// Serialize the stars to a file
 		starCachefile, _ := json.MarshalIndent(stars, "", " ")
 		_ = ioutil.WriteFile("stars.json", starCachefile, 0644)
 		fmt.Println("Wrote stars to stars.json")
 	}
+	p := message.NewPrinter(language.English)
 
-	fmt.Printf("Completed reading stars. Found %d relevant stars.\n", len(stars))
+	p.Printf("Completed reading stars. Found %d relevant stars in %s.\n", len(stars), time.Since(start))
+
+	if *neutron_boosting {
+		fmt.Println("Neutron boosting is enabled.")
+		start = time.Now()
+		neutron_file_ok := neutron_file_ok()
+		if !neutron_file_ok {
+			fmt.Println(neutronfile, "does not exist or is out of date.")
+			fmt.Println("Downloading the file now... This may take a while.")
+			download_neutron_file()
+		} else {
+			fmt.Println(neutronfile, "is up to date.")
+		}
+
+		neutron_stars := find_neutron_stars_offline(neutronfile)
+		neutrons := update_stars_with_neutrons(stars, neutron_stars)
+
+		p.Printf("Loaded %d neutrons, and enabled %d neutrons in %s.\n", len(neutron_stars), neutrons, time.Since(start))
+	}
 
 	// 2. prepare for pathfinding
 	fmt.Println("Phase 2 - preparing for pathfinding")

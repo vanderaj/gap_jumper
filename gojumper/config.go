@@ -61,13 +61,13 @@ func get_arguments() {
 	startcoords = flag.String("startcoords", "-5157.90625,-3.28125,-3291.5", "Galactic coordinates to start routing from. -s X Y Z")
 	startcoords = flag.String("s", "-5157.90625,-3.28125,-3291.5", "Galactic coordinates to start routing from. -s X Y Z")
 
-	destcoords = flag.String("destcoords", "", "Galactic coordinates of target destination. -d X Y Z")
+	destcoords = flag.String("destcoords", "-5151.65625,2002.9375,-3295.375", "Galactic coordinates of target destination. -d X Y Z")
 	destcoords = flag.String("d", "-5151.65625,2002.9375,-3295.375", "Galactic coordinates of target destination. -d X Y Z")
 
 	neutron_boosting = flag.Bool("neutron-boosting", true, "Utilize Neutron boosting. The necessary file will be downloaded automatically.")
 	neutron_boosting = flag.Bool("nb", true, "Utilize Neutron boosting. The necessary file will be downloaded automatically.")
 
-	cached = flag.Bool("cached", true, "Reuse nodes data from previous run")
+	cached = flag.Bool("cached", false, "Reuse nodes data from previous run")
 
 	starsfile = flag.String("starsfile", "systemsWithCoordinates.json", "Path to EDSM system coordinates JSON file.")
 

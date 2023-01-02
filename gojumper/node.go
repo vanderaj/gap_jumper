@@ -3,7 +3,29 @@ package main
 type Node struct {
 	name      string
 	scoopable bool
-	all_nodes map[string]Node
+}
+
+// This takes in all the star-data and creates node-objects.
+// < screen > is the instance of class ScreenWork() that calls this function.
+func create_nodes(stars []Star) {
+
+	// var all_nodes = make([]Node, 0)
+
+	// start := time.Now()
+	// for index, data = range stars {
+	// 	node = cd.Node(starname, data, screen.mother.jumpable_distances, stars, all_nodes)
+	// 	all_nodes[starname] = node
+
+	// 	if (index+1)%100 == 0 {
+	// 		time_so_far = time.Now() - start
+	// 		time_left = len(stars)/total*time_so_far - time_so_far
+	// 		this = "Processed {} of {} stars. ".format(total+1, len(stars))
+	// 		that = "Finished in ca. {:.2f} seconds.".format(time_left)
+	// 		print(this + that)
+	// 	}
+	// }
+
+	// pristine_nodes = all_nodes
 }
 
 // Nodes are beaically the stars, seen as bases that send out jumpers to

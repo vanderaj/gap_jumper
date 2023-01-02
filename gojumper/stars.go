@@ -166,12 +166,10 @@ func find_systems_cached() []Star {
 	// Read the file
 	decoder := json.NewDecoder(file)
 	for decoder.More() {
-		// var star Star
 		err := decoder.Decode(&stars)
 		if err != nil {
 			log.Fatal(err)
 		}
-		// stars = append(stars, star)
 	}
 
 	return stars
@@ -205,7 +203,8 @@ func find_systems_offline() []Star {
 
 	var percent float64
 
-	var stars []Star
+	// Make room for up to 30,000 stars, this should be enough for many tougher routes
+	stars := make([]Star, 0, 30000)
 
 	for scanner.Scan() {
 		text = scanner.Text()
@@ -223,8 +222,7 @@ func find_systems_offline() []Star {
 		}
 
 		if within_limits(max_limits, min_limits, startcoord, destcoord, data) {
-			tmp := Star{data.ID, data.Name, Coord{data.Coords.X, data.Coords.Y, data.Coords.Z}, false}
-			stars = append(stars, tmp)
+			stars = append(stars, Star{data.ID, data.Name, Coord{data.Coords.X, data.Coords.Y, data.Coords.Z}, false})
 		}
 
 		if i%100000 == 0 {

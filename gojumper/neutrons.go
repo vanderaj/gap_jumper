@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -46,26 +45,27 @@ func download_neutron_file() {
 // < stars > is the dict with the information about said stars.
 // < neutron_stars > is the set with the id's of the systems that contain
 // neutron stars.
-func update_stars_with_neutrons(stars []Star, neutron_stars []Star) {
+func update_stars_with_neutrons(stars []Star, neutron_stars map[int]Star) int {
 
 	var star Star
-	var neutron Star
 	var index int
+	var neutrons int
 
 	for index, star = range stars {
-		for _, neutron = range neutron_stars {
-			if star.ID == neutron.ID {
-				fmt.Println("Found neutron star: ", star.Name)
-				stars[index].Neutron = true
-				break
-			}
+		if star.ID == neutron_stars[star.ID].ID {
+			stars[index].Neutron = true
+			neutrons++
 		}
 	}
+
+	return neutrons
 }
 
-func find_neutron_stars_offline(neutronfile string) []Star {
+func find_neutron_stars_offline(neutronfile string) map[int]Star {
 
-	neutron_stars := make([]Star, 0)
+	// Make a map that can take an initial 3 million entries.
+	// Preallocation of memory will save a lot of time
+	neutron_stars := make(map[int]Star, 3000000)
 
 	// Open the file.
 	file, err := os.Open(neutronfile)
@@ -87,7 +87,7 @@ func find_neutron_stars_offline(neutronfile string) []Star {
 		if err != nil {
 			continue
 		}
-		neutron_stars = append(neutron_stars, Star{id, fields[2], Coord{0, 0, 0}, true})
+		neutron_stars[id] = Star{id, fields[2], Coord{0, 0, 0}, true}
 	}
 	return neutron_stars
 }
