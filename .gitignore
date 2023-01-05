@@ -6,3 +6,5 @@ gojumper/gojumper.exe
 gojumper/stars.json
 stars.json
 neutron-stars.csv
+gojumper/gojumper
+__pycache__/*

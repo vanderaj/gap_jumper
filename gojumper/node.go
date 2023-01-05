@@ -1,171 +1,195 @@
 package main
 
+import "math"
+
+// Nodes are beaically the stars, seen as bases that send out jumpers to
+// reachable stars.
 type Node struct {
-	name      string
-	scoopable bool
+	name        string
+	data        Star
+	scoopable   bool
+	x_upper     float64
+	x_lower     float64
+	y_upper     float64
+	y_lower     float64
+	z_upper     float64
+	z_lower     float64
+	visited     bool
+	can_jump_to []string
+	reachable   map[int][]string
+	jumper      *Jumper
+}
+
+// 	# < all_stars > is the dict that contains ALL stars-information, but it is
+// 	# NOT the dict that contains all nodes! Because in the beginning I have just
+// 	# the information about the stars, but not yet the nodes.
+
+// 	ATTENTION: < jump_distances > must have 0 (zero) as the very first value
+// 	and elements with even indice (e.g. element 3 => index 2) need to be
+// 	jump length when running on fumes. _find_reachable_stars() depends on that!
+func initNode(node *Node, data Star, all_stars []Star) {
+
+	(*node).name = data.Name
+
+	// < data > is a dict that contains the coordinates as 'x', 'y', 'z' and if
+	// a star is scoopable.
+	(*node).data = data
+
+	// This attribute is meant to be able to avoid jumps to non-scoopbable
+	// stars when already on fumes. However, in EDSM not all stars have this
+	// information and I need to set self.scoopable to True to make the
+	// algorithm work at all. Thus, this feature is implemented in
+	// _check_free_stars() but is obviously rather useless.
+	// However, if that ever changes, use < data['scoopable'] > as value
+	// to set this attribute.
+	(*node).scoopable = true
+
+	// This will be filled when _check_free_stars() is called. It will contain
+	// the names of the systems which have not yet been visited and which are
+	// within a give jump range.
+	(*node).can_jump_to = make([]string, 0)
+
+	// The algorithm works by sending "jumpers" from one star to the next.
+	// If one star can be reached from another is defined by < jump_distances >
+	// node.jump_distances = jump_distances // Go version uses a global variable
+
+	// The jumper mentioned above. It will become later a class Jumper object.
+	(*node).jumper = nil
+
+	// If a system was visited by a jumper it shall not be visited again.
+	// Actually this attribute is redundant, since if a system contains a
+	// jumper it is automatically visited. So the latter could be used instead.
+	// However, I figured that out when everything was finished and thus
+	// kept < visited > to not break anything.
+	(*node).visited = false
+
+	// I figure once out which other stars can be reached with a given jump
+	// range from the given system. So each list is a list of the stars up
+	// to a certain distance.
+	// self.jump_distances has zero as the very first element and is thus
+	// one element longer than self.reachable shall be.
+	(*node).reachable = make(map[int][]string, len(jump_distances))
+
+	// See comment to _calculate_limits() what I'm doing here and why.
+	_calculate_limits(node)
+
+	// And finally figure out all the stars that can be reached with a
+	// given jumprange.
+	_find_reachable_stars(node, all_stars)
 }
 
 // This takes in all the star-data and creates node-objects.
 // < screen > is the instance of class ScreenWork() that calls this function.
-func create_nodes(stars []Star) {
+func create_nodes(stars []Star) map[string]Node {
 
-	// var all_nodes = make([]Node, 0)
+	// Let's make room for about 30,000 nodes, this should be enough for many
+	all_nodes := make(map[string]Node, 30000)
 
-	// start := time.Now()
-	// for index, data = range stars {
-	// 	node = cd.Node(starname, data, screen.mother.jumpable_distances, stars, all_nodes)
-	// 	all_nodes[starname] = node
+	for _, data := range stars {
+		node := Node{}
 
-	// 	if (index+1)%100 == 0 {
-	// 		time_so_far = time.Now() - start
-	// 		time_left = len(stars)/total*time_so_far - time_so_far
-	// 		this = "Processed {} of {} stars. ".format(total+1, len(stars))
-	// 		that = "Finished in ca. {:.2f} seconds.".format(time_left)
-	// 		print(this + that)
-	// 	}
-	// }
+		// As Go doesn't have classes, we will call the functions individually, updating the node
+		initNode(&node, data, stars)
+		all_nodes[data.Name] = node
+	}
 
-	// pristine_nodes = all_nodes
+	return all_nodes
 }
 
-// Nodes are beaically the stars, seen as bases that send out jumpers to
-// reachable stars.
+// Creating these nodes takes A LOT of time if many nodes are to be created.
+// It seems that calculating the distances to all other stars requires most
+// of this time. Hence, I decided that the distances shall just be
+// calculated if a star actually can be reached. The latter means that it
+// is "in a box", with side length's equal to the maximum jump range,
+// around this node.
+// This decreased the time to create all the nodes by a factor of twenty (!).
+// This function creates the boundaries of said box.
+func _calculate_limits(node *Node) {
 
-// class Node(object):
-// 	# < all_stars > is the dict that contains ALL stars-information, but it is
-// 	# NOT the dict that contains all nodes! Because in the beginning I have just
-// 	# the information about the stars, but not yet the nodes.
-// 	# < data > is a dict that contains the coordinates as 'x', 'y', 'z' and if
-// 	# a star is scoopable.
-// 	# ATTENTION: < jump_distances > must have 0 (zero) as the very first value
-// 	# and elements with even indice (e.g. element 3 => index 2) need to be
-// 	# jump length when running on fumes. _find_reachable_stars() depends on that!
-// 	def __init__(self, name, data, jump_distances, all_stars, all_nodes):
-// 		self.name = name
-// 		# This attribute is meant to be able to avoid jumps to non-scoopbable
-// 		# stars when already on fumes. However, in EDSM not all stars have this
-// 		# information and I need to set self.scoopable to True to make the
-// 		# algorithm work at all. Thus, this feature is implemented in
-// 		# _check_free_stars() but is obviously rather useless.
-// 		# However, if that ever changes, use < data['scoopable'] > as value
-// 		# to set this attribute.
-// 		self.scoopable = True
-// 		# I love pointers, because this will automatically fill up :).
-// 		self.all_nodes = all_nodes
-// 		# The algorithm works by sending "jumpers" from one star to the next.
-// 		# If one star can be reached from another is defined by < jump_distances >
-// 		self.jump_distances = jump_distances
-// 		# The jumper mentioned above. It will become later a class Jumper object.
-// 		self.jumper = None
-// 		# If a system was visited by a jumper it shall not be visited again.
-// 		# Actually this attribute is redundant, since if a system contains a
-// 		# jumper it is automatically visited. So the latter could be used instead.
-// 		# However, I figured that out when everything was finished and thus
-// 		# kept < visited > to not break anything.
-// 		self.visited = False
-// 		# This will be filled when _check_free_stars() is called. It will contain
-// 		# the names of the systems which have not yet been visited and which are
-// 		# within a give jump range.
-// 		self.can_jump_to = []
-// 		# I want to keep the original dict for this star, just in case.
-// 		# It also contains the x, y and z coordinates of the system.
-// 		self.data = data
-// 		# Neutron stars will allow extremely long jumps, but just neutron
-// 		# stars allow that. Hence, I'd like have easy access to this attribute
-// 		# of a star
-// 		self.neutron = self.data['neutron']
-// 		# See comment to _calculate_limits() what I'm doing here and why.
-// 		self._calculate_limits()
-// 		# I figure once out which other stars can be reached with a given jump
-// 		# range from the given system. So each list is a list of the stars up
-// 		# to a certain distance.
-// 		# self.jump_distances has zero as the very first element and is thus
-// 		# one element longer than self.reachable shall be.
-// 		self.reachable = [[] for i in range(len(self.jump_distances) - 1)]
-// 		# And finally figure out all the stars that can be reached with a
-// 		# given jumprange.
-// 		self._find_reachable_stars(all_stars)
+	var half_cube_length float64
 
-// 	# Creating these nodes takes A LOT of time if many nodes are to be created.
-// 	# It seems that calculating the distances to all other stars requires most
-// 	# of this time. Hence, I decided that the distances shall just be
-// 	# calculated if a star actually can be reached. The latter means that it
-// 	# is "in a box", with side length's equal to the maximum jump range,
-// 	# around this node.
-// 	# This decreased the time to create all the nodes by a factor of twenty (!).
-// 	# This function creates the boundaries of said box.
-// 	def _calculate_limits(self):
-// 		if self.neutron:
-// 			half_cube_length = self.jump_distances[-1]
-// 		else:
-// 			half_cube_length = self.jump_distances[-2]
+	if (*node).data.Neutron {
+		half_cube_length = jump_distances[9]
+	} else {
+		half_cube_length = jump_distances[8]
+	}
 
-// 		self.x_upper = self.data['x'] + half_cube_length
-// 		self.x_lower = self.data['x'] - half_cube_length
-// 		self.y_upper = self.data['y'] + half_cube_length
-// 		self.y_lower = self.data['y'] - half_cube_length
-// 		self.z_upper = self.data['z'] + half_cube_length
-// 		self.z_lower = self.data['z'] - half_cube_length
+	node.x_upper = (*node).data.Star_coords.X + half_cube_length
+	node.x_lower = (*node).data.Star_coords.X - half_cube_length
+	node.y_upper = (*node).data.Star_coords.Y + half_cube_length
+	node.y_lower = (*node).data.Star_coords.Y - half_cube_length
+	node.z_upper = (*node).data.Star_coords.Z + half_cube_length
+	node.z_lower = (*node).data.Star_coords.Z - half_cube_length
+}
 
-// 	# This calculates the distance to another star.
-// 	# This is basically the same what is done in additional_functions.py =>
-// 	# distance_to_point(). However, I wanted this also to be a method of this
-// 	# class.
-// 	def _this_distance(self, second_star_data):
-// 		x_square = (self.data['x'] - second_star_data['x'])**2
-// 		y_square = (self.data['y'] - second_star_data['y'])**2
-// 		z_square = (self.data['z'] - second_star_data['z'])**2
+// This calculates the distance to another star.
+// This is basically the same what is done in additional_functions.py =>
+// distance_to_point(). However, I wanted this also to be a method of this
+// class.
+func _this_distance(node *Node, second_star_data Star) float64 {
+	x_square := math.Pow(((*node).data.Star_coords.X - second_star_data.Star_coords.X), 2)
+	y_square := math.Pow(((*node).data.Star_coords.Y - second_star_data.Star_coords.Y), 2)
+	z_square := math.Pow(((*node).data.Star_coords.Z - second_star_data.Star_coords.Z), 2)
 
-// 		return sqrt(x_square + y_square + z_square)
+	return math.Sqrt(x_square + y_square + z_square)
+}
 
-// 	# This function checks for if a star is within the box of reachable stars
-// 	# around a given node. See also comment to _calculate_limits().
-// 	def _in_box(self, second_star_data):
-// 		first = self.x_lower < second_star_data['x'] < self.x_upper
-// 		second = self.y_lower < second_star_data['y'] < self.y_upper
-// 		third = self.z_lower < second_star_data['z'] < self.z_upper
+// 	This function checks for if a star is within the box of reachable stars
+// 	around a given node. See also comment to _calculate_limits().
+func _in_box(node *Node, second_star_data Star) bool {
+	first := ((*node).x_lower < second_star_data.Star_coords.X) && (second_star_data.Star_coords.X < (*node).x_upper)
+	second := ((*node).y_lower < second_star_data.Star_coords.Y) && (second_star_data.Star_coords.Y < (*node).y_upper)
+	third := ((*node).z_lower < second_star_data.Star_coords.Z) && (second_star_data.Star_coords.Z < (*node).z_upper)
 
-// 		if first and second and third:
-// 			return True
-// 		else:
-// 			return False
+	return first && second && third
+}
 
 // 	# This function finds all stars within the range(s) of the starship in use.
 // 	# < jump_distances > is a list with all the possible jump distances and
 // 	# zero as the first element. See also comment to __init__().
-// 	def _find_reachable_stars(self, all_stars):
-// 		for name, data in all_stars.items():
-// 			# Don't do all the calculations if the star couldn't be
-// 			# reached anyway.
-// 			# ATTENTION: Since the sphere around this node is smaller than the
-// 			# square box the below calculations still need to take care of
-// 			# case that a star is in the box but outside maximum jumping
-// 			# distance. This is implemented below.
-// 			if not self._in_box(data):
-// 				continue
+func _find_reachable_stars(node *Node, all_stars []Star) {
 
-// 			distance = self._this_distance(data)
+	for _, data := range all_stars {
+		// Don't do all the calculations if the star couldn't be
+		// reached anyway.
+		// ATTENTION: Since the sphere around this node is smaller than the
+		// square box the below calculations still need to take care of
+		// case that a star is in the box but outside maximum jumping
+		// distance. This is implemented below.
+		if !_in_box(node, data) {
+			continue
+		}
 
-// 			# The cube contains volumes outside the sphere of the maximum
-// 			# jump range around a node. Don't do anything if another star falls
-// 			# into such an area.
-// 			# Remember that the last element in self.jump_distances is the
-// 			# jump distance for neutron boosted jumps.
-// 			if not self.neutron and distance > self.jump_distances[-2]:
-// 				continue
-// 			elif distance > self.jump_distances[-1]:
-// 				continue
+		distance := _this_distance(node, data)
 
-// 			# ATTENTION: self.jump_distances contains zero as the first
-// 			# element to make this if-condition possible. Thus it is ONE
-// 			# element longer (!) than self.reachable and ...
-// 			for i in range(len(self.jump_distances) - 1):
-// 				# ... the element with index (i + 1) in self.jump_distances
-// 				# corresponds to ...
-// 				if self.jump_distances[i] <= distance and \
-// 								distance < self.jump_distances[i + 1]:
-// 					# ... element i in self.reachable.
-// 					self.reachable[i].append(name)
+		// The cube contains volumes outside the sphere of the maximum
+		// jump range around a node. Don't do anything if another star falls
+		// into such an area.
+		// Remember that the last element in self.jump_distances is the
+		// jump distance for neutron boosted jumps.
+		if !(*node).data.Neutron && distance > jump_distances[8] { // further than a Premium fsd boost
+			continue
+		}
+
+		if (*node).data.Neutron && distance > jump_distances[9] { // further than a neutron boost
+			continue
+		}
+
+		// ATTENTION: self.jump_distances contains zero as the first
+		// element to make this if-condition possible. Thus it is ONE
+		// element longer (!) than self.reachable and ...
+		slicelen := len(jump_distances) - 1
+		for i, d := range jump_distances[:slicelen] {
+			// ... the element with index (i + 1) in self.jump_distances
+			// corresponds to ...
+			if d <= distance && distance < jump_distances[i+1] {
+				// ... element i in self.reachable.
+				(*node).reachable[i] = append((*node).reachable[i], data.Name)
+
+			}
+		}
+	}
+}
 
 // 	# This method checks if the nearby stystems are free to jump to.
 // 	# < this_distance > is the index of the list in self.reachable. Do NOT

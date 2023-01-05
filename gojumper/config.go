@@ -67,7 +67,7 @@ func get_arguments() {
 	neutron_boosting = flag.Bool("neutron-boosting", true, "Utilize Neutron boosting. The necessary file will be downloaded automatically.")
 	neutron_boosting = flag.Bool("nb", true, "Utilize Neutron boosting. The necessary file will be downloaded automatically.")
 
-	cached = flag.Bool("cached", false, "Reuse nodes data from previous run")
+	cached = flag.Bool("cached", true, "Reuse nodes data from previous run")
 
 	starsfile = flag.String("starsfile", "systemsWithCoordinates.json", "Path to EDSM system coordinates JSON file.")
 
