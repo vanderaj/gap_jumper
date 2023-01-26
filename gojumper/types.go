@@ -25,6 +25,23 @@ type Star struct {
 	Neutron     bool   `json:"neutron"`
 }
 
+// Nodes are beaically the stars, seen as bases that send out jumpers to
+// reachable stars.
+type Node struct {
+	name        string
+	data        Star
+	scoopable   bool
+	x_upper     float64
+	x_lower     float64
+	y_upper     float64
+	y_lower     float64
+	z_upper     float64
+	z_lower     float64
+	visited     bool
+	can_jump_to []string
+	reachable   map[int][]string
+	jumper      *Jumper
+}
 type Jumper struct {
 	// The list with all the systems visited by this jumper.
 	visited_systems []string
