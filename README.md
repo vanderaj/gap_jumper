@@ -23,7 +23,7 @@ $ python3 gap_jumper.py
 That will start the GUI, too. 
 
 You will see this window (well, the colour might be different):
-![Image of User input window](https://github.com/SorenHeinze/gap_jumper/blob/master/0003_input_screen.png)
+![Image of User input window](0003_input_screen.png)
 
 An option for looking up the necessary stars online at EDSM is available. However, I recommend to use the offline mode due to server side rate limits (see below). For that the `systemsWithCoordinates.json.gz` from [EDSM Nightly Dumps](https://www.edsm.net/en/nightly-dumps) needs to be downloaded and the unzipped (!) file must be copied into the local directory. The local directory is the same directory in which the running code (or the the exe-file) is residing. 
 

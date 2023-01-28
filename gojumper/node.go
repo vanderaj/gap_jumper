@@ -1,16 +1,16 @@
 package main
 
-import "math"
-
-
+import (
+	"math"
+)
 
 // 	# < all_stars > is the dict that contains ALL stars-information, but it is
 // 	# NOT the dict that contains all nodes! Because in the beginning I have just
 // 	# the information about the stars, but not yet the nodes.
 
-// 	ATTENTION: < jump_distances > must have 0 (zero) as the very first value
-// 	and elements with even indice (e.g. element 3 => index 2) need to be
-// 	jump length when running on fumes. _find_reachable_stars() depends on that!
+// ATTENTION: < jump_distances > must have 0 (zero) as the very first value
+// and elements with even indice (e.g. element 3 => index 2) need to be
+// jump length when running on fumes. _find_reachable_stars() depends on that!
 func initNode(node *Node, data Star, all_stars []Star) {
 
 	(*node).name = data.Name
@@ -118,8 +118,8 @@ func _this_distance(node *Node, second_star_data Star) float64 {
 	return math.Sqrt(x_square + y_square + z_square)
 }
 
-// 	This function checks for if a star is within the box of reachable stars
-// 	around a given node. See also comment to _calculate_limits().
+// This function checks for if a star is within the box of reachable stars
+// around a given node. See also comment to _calculate_limits().
 func _in_box(node *Node, second_star_data Star) bool {
 	first := ((*node).x_lower < second_star_data.Star_coords.X) && (second_star_data.Star_coords.X < (*node).x_upper)
 	second := ((*node).y_lower < second_star_data.Star_coords.Y) && (second_star_data.Star_coords.Y < (*node).y_upper)
@@ -128,9 +128,9 @@ func _in_box(node *Node, second_star_data Star) bool {
 	return first && second && third
 }
 
-// 	# This function finds all stars within the range(s) of the starship in use.
-// 	# < jump_distances > is a list with all the possible jump distances and
-// 	# zero as the first element. See also comment to __init__().
+// # This function finds all stars within the range(s) of the starship in use.
+// # < jump_distances > is a list with all the possible jump distances and
+// # zero as the first element. See also comment to __init__().
 func _find_reachable_stars(node *Node, all_stars []Star) {
 
 	for _, data := range all_stars {
@@ -175,105 +175,105 @@ func _find_reachable_stars(node *Node, all_stars []Star) {
 	}
 }
 
-// 	This method checks if the nearby stystems are free to jump to.
-// 	< this_distance > is the index of the list in self.reachable. Do NOT
-// 	confuse with the method _this_distance()!
-func _check_free_stars(self *Node, this_distance int ) {
-	*self.can_jump_to = make(map[string]bool)
-	for _, name := range self.reachable[this_distance] {
-		next_star := (*self).all_nodes[name]
-		if !next_star.visited {
-			// # The following will never be triggered as of now, since the
-			// .scoopable attribute is set be default to True. However, this
-			// if-condition is meant to NOT allow a jump if the tank is empty
-			// afterwards and the next star is unscoopable.
-			// If this information ever will be available for all systems in
-			// the EDSM database, it is automatically available (see also
-			// comment above to self.scoopable).
-			if self.jumper.jumps_left == 1 && !next_star.scoopable {
-				// Check if a star is nearby to re-fill the tank.
-				if self._refill_at_nearest_scoopable(name) {
-					self.jumper.jumps_left = self.jumper.max_jumps - 1
-					self.can_jump_to.append(name)
-				} else {
-					// pass
-				}
-			// If (this_distance  + 1) is even it is a jump distance for jumping
-			// on fumes. In this case the next star needs to be scoopable
-			// because otherwise the jumper would strand there!
-			} else {
-				if (this_distance + 1) % 2 == 0 && next_star.scoopable {
-					self.jumper.jumps_left = 1
-					append(self.jumper.on_fumes, (*self).name, next_star.name)
-					this = fmt.Sprintf("On fumes jump from %s to %s", (*self).name, next_star.name)
-					self.jumper.notes.append(this)
-					self.can_jump_to.append(name)
-				} else {
-					self.can_jump_to.append(name)
-				}
-			}
-		}
-	}
+// This method checks if the nearby stystems are free to jump to.
+// < this_distance > is the index of the list in self.reachable. Do NOT
+// confuse with the method _this_distance()!
+func _check_free_stars(self *Node, this_distance int) {
+	// *self.can_jump_to = make(map[string]bool)
+	// for _, name := range self.reachable[this_distance] {
+	// 	next_star := (*self).all_nodes[name]
+	// 	if !next_star.visited {
+	// 		// # The following will never be triggered as of now, since the
+	// 		// .scoopable attribute is set be default to True. However, this
+	// 		// if-condition is meant to NOT allow a jump if the tank is empty
+	// 		// afterwards and the next star is unscoopable.
+	// 		// If this information ever will be available for all systems in
+	// 		// the EDSM database, it is automatically available (see also
+	// 		// comment above to self.scoopable).
+	// 		if self.jumper.jumps_left == 1 && !next_star.scoopable {
+	// 			// Check if a star is nearby to re-fill the tank.
+	// 			if self._refill_at_nearest_scoopable(name) {
+	// 				self.jumper.jumps_left = self.jumper.max_jumps - 1
+	// 				self.can_jump_to.append(name)
+	// 			} else {
+	// 				// pass
+	// 			}
+	// 			// If (this_distance  + 1) is even it is a jump distance for jumping
+	// 			// on fumes. In this case the next star needs to be scoopable
+	// 			// because otherwise the jumper would strand there!
+	// 		} else {
+	// 			if (this_distance+1)%2 == 0 && next_star.scoopable {
+	// 				self.jumper.jumps_left = 1
+	// 				append(self.jumper.on_fumes, (*self).name, next_star.name)
+	// 				this = fmt.Sprintf("On fumes jump from %s to %s", (*self).name, next_star.name)
+	// 				self.jumper.notes.append(this)
+	// 				self.can_jump_to.append(name)
+	// 			} else {
+	// 				self.can_jump_to.append(name)
+	// 			}
+	// 		}
+	// 	}
+	// }
 }
 
-// 	Case not covered in _check_free_stars(): Jumper won't jump because the
-// 	tank is almost empty and the next star is not scoopable but another
-// 	nearby star could be used to re-fill but was already visited.
-// 	Solution: Make a detour to the scoopable star, re-fill, fly back and make
-// 	the jump. However, this shall be done JUST for regular jumps and the
-// 	minimum number of jumps with full tank must be three.
-// 	ATTENTION: Just stars in regular jump distance will be considered for
-// 	refill!
-// 	For the time being, the if-condition in _check_free_stars() which calls
-// 	this function will never be triggered, will this function also never be
-// 	used (see also comment in _check_free_stars()).
-func _refill_at_nearest_scoopable(self *Node, point_of_origin string) {
-	for _, name := range (*self).reachable[0] {
-		next_star = (*self).all_nodes[name]
-		if next_star.scoopable {
-			this = (point_of_origin, name, point_of_origin)	// tuple
-			self.jumper.scoop_stops.append(this)
-			this = 'Refill needed at {}! '.format(point_of_origin)
-			that = 'Jump to {} and back to {}.'.format(name, point_of_origin)
-			self.jumper.notes.append(this + that)
+// Case not covered in _check_free_stars(): Jumper won't jump because the
+// tank is almost empty and the next star is not scoopable but another
+// nearby star could be used to re-fill but was already visited.
+// Solution: Make a detour to the scoopable star, re-fill, fly back and make
+// the jump. However, this shall be done JUST for regular jumps and the
+// minimum number of jumps with full tank must be three.
+// ATTENTION: Just stars in regular jump distance will be considered for
+// refill!
+// For the time being, the if-condition in _check_free_stars() which calls
+// this function will never be triggered, will this function also never be
+// used (see also comment in _check_free_stars()).
+func _refill_at_nearest_scoopable(self *Node, point_of_origin string) bool {
+	// for _, name := range (*self).reachable[0] {
+	// 	next_star = (*self).all_nodes[name]
+	// 	if next_star.scoopable {
+	// 		this = (point_of_origin, name, point_of_origin)	// tuple
+	// 		self.jumper.scoop_stops.append(this)
+	// 		this = 'Refill needed at {}! '.format(point_of_origin)
+	// 		that = 'Jump to {} and back to {}.'.format(name, point_of_origin)
+	// 		self.jumper.notes.append(this + that)
 
-			return true
-		}
-	}
+	// 		return true
+	// 	}
+	// }
 
 	// If no scoopable star is near, the jumper is stuck.
 	return false
 }
 
-// 	This is basically the method called on each node-instance if the
-// 	node houses a jumper.
-// 	this is the heart of the algorithm to explore the network of stars to
-// 	find a route.
-func _send_jumpers(self *Node, this_distance int) {
+// This is basically the method called on each node-instance if the
+// node houses a jumper.
+// this is the heart of the algorithm to explore the network of stars to
+// find a route.
+func _send_jumpers(self *Node, this_distance int) bool {
 	// The .can_jump_to attribute is set when ._check_free_stars() is
 	// called in additional_functions.py => get_nodes_that_can_send_jumpers()
 	// which is called at the start of the while-loop in explore_path() in
 	// additional_functions.py.
-	for _, name := range (*self).can_jump_to {
-		new_jumper := new Jumper{}
-		copy(new_jumper, (*self).*jumper)
-		new_jumper.visited_systems = append(new_jumper.visited_systems, name)
-		_add_jump_types(&new_jumper, this_distance)
+	// for _, name := range (*self).can_jump_to {
+	// 	new_jumper := new Jumper{}
+	// 	copy(new_jumper, (*self).*jumper)
+	// 	new_jumper.visited_systems = append(new_jumper.visited_systems, name)
+	// 	_add_jump_types(&new_jumper, this_distance)
 
-		next_star := (*self).all_nodes[name]
-		next_star_data := next_star.data
-		distance = _this_distance(self, next_star_data)
-		new_jumper.distances = append(new_jumper.distances, distance)
+	// 	next_star := (*self).all_nodes[name]
+	// 	next_star_data := next_star.data
+	// 	distance = _this_distance(self, next_star_data)
+	// 	new_jumper.distances = append(new_jumper.distances, distance)
 
-		// Another condition that is of little use as long the information
-		// about scoopability is not available for all systems in EDSM.
-		if next_star.scoopable {
-			new_jumper.jumps_left = new_jumper.max_jumps
-		} else {
-			new_jumper.jumps_left -= 1
-		}
-		next_star.jumper = &new_jumper
-		next_star.visited = true
-	}
+	// 	// Another condition that is of little use as long the information
+	// 	// about scoopability is not available for all systems in EDSM.
+	// 	if next_star.scoopable {
+	// 		new_jumper.jumps_left = new_jumper.max_jumps
+	// 	} else {
+	// 		new_jumper.jumps_left -= 1
+	// 	}
+	// 	next_star.jumper = &new_jumper
+	// 	next_star.visited = true
+	// }
 	return true
 }
