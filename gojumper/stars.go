@@ -179,7 +179,12 @@ func find_systems_offline() []Star {
 
 	max_limits, min_limits := x_y_z_limits(startcoord, destcoord)
 
-	starFile, _ := os.Stat(*starsfile)
+	starFile, err := os.Stat(*starsfile)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	filesize := starFile.Size()
 
 	// The systemsWithCoordinates file is a jsonl file which contains all known systems
