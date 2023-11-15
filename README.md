@@ -56,8 +56,7 @@ Be aware, that finding the relevant stars takes some time. No matter if the sear
 Pressing the button marked "C" prepares the information from the previous step for the actual pathfinding algorithm.  
 This process can take a lot of time if many stars (many more than approx. 10,000) need to be considered!
 
-Finally, the process to find a path through the void is started by pressing the button marked "D".  
-This process also takes a lot of time if many stars need to be considered.
+Finally, the process to find a path through the void is started by pressing the button marked "D". This process also takes a lot of time if many stars need to be considered.
 
 Execution time of the last two process are reasonable if 10,000 stars or less are used. 13,000 stars are also ok; there is no strict limit. But e.g., 30,000 stars will likely lead to process-times beyond one hour.
 
