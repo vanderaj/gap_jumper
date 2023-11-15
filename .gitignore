@@ -8,3 +8,4 @@ stars.json
 neutron-stars.csv
 gojumper/gojumper
 __pycache__/*
+venv/*

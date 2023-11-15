@@ -16,11 +16,15 @@ Just put the necessary information (start- and end-coordinates, your jump-ranges
 # Usage
 If you are a windows user and don't want to run the code yourself: simply double click the exe-file. This will start the GUI.
 
-If you want to run the code yourself (recommended) it is assumed that all necessary modules are installed. It is also assumed that users who run the code themself know how to do that. Simply call python 3 on a shell/bash/console with the program name as a parameter:
+If you want to run the code yourself (recommended) simply call python 3 on a shell/bash/console with the program name as a parameter:
+
 ```
+$ python3 -m venv venv
+$ python3 -m pip install -r requirements.txt
 $ python3 gap_jumper.py
 ```
-That will start the GUI, too. 
+
+That will start the GUI, too.
 
 You will see this window (well, the colour might be different):
 ![Image of User input window](0003_input_screen.png)

@@ -24,8 +24,6 @@ from math import sqrt
 from time import time
 import argparse
 import os
-import requests
-
 
 # This finds the closest system to a given point. Used e.g. to find the 
 # systems closest to the start- and end-coords.
