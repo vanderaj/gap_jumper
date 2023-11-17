@@ -104,6 +104,14 @@ class ScreenInput(QWidget):
 
 	# Just to keep _initUI() more tidy.
 	def _make_coordinates_input_fields(self):
+		self.layout.addWidget(QLabel("Start System:"), 3, 0)
+		setattr(self, 'start_system', QLineEdit())
+		self.layout.addWidget(getattr(self, 'start_system'), 3, 1)
+
+		self.start_search_button = QPushButton("Search for Start System")
+		self.start_search_button.clicked.connect(self._start_search_action)
+		self.layout.addWidget(self.start_search_button, 3, 2)
+
 		these = ["x", "y", "z"]
 		for i in range(len(these)):
 			self.layout.addWidget(QLabel("Start {} Coordinate:".format(these[i])), i + 4, 0)
@@ -305,6 +313,10 @@ class ScreenInput(QWidget):
 			this = "The cached stars-file will be used."
 			self.mother.screen_work.star_search_text.setText(this)
 			self.mother.screen_work.star_search_button.hide()
+
+	# Start system search action
+	def _start_search_action(self):
+		return True
 
 
 	# Finally, the definition of all the stuff that needs to be done, when the 
