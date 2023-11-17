@@ -21,8 +21,8 @@
 
 from PyQt5.QtWidgets import QWidget, QGridLayout, QLabel, QLineEdit, QPushButton, QFileDialog, QSpacerItem, QCheckBox, QRadioButton, QButtonGroup
 import os
-import additional_functions as af
-
+import json
+import requests
 
 # The class definition of the the user input layer of the main window.
 class ScreenInput(QWidget):
@@ -117,6 +117,14 @@ class ScreenInput(QWidget):
 			self.layout.addWidget(QLabel("Start {} Coordinate:".format(these[i])), i + 4, 0)
 			setattr(self, 'start_{}_input'.format(these[i]), QLineEdit())
 			self.layout.addWidget(getattr(self, 'start_{}_input'.format(these[i])), i + 4, 1)
+
+		self.layout.addWidget(QLabel("End System:"), 7, 0)
+		setattr(self, 'end_system', QLineEdit())
+		self.layout.addWidget(getattr(self, 'end_system'), 7, 1)
+
+		self.end_search_button = QPushButton("Search for Start System")
+		self.end_search_button.clicked.connect(self._end_search_action)
+		self.layout.addWidget(self.end_search_button, 7, 2)
 
 		# If the tab-key is used to go to the next input field the cursor will 
 		# end up in the next field that was put into < self.layout >.
@@ -316,8 +324,58 @@ class ScreenInput(QWidget):
 
 	# Start system search action
 	def _start_search_action(self):
+		# Grab the system name
+		start_system = self.start_system.text().strip()
+
+		# Call EDSM API for the coordinates
+		url = 'https://www.edsm.net/api-v1/system'
+		payload = {'systemName':start_system, 'showCoordinates':1}
+		coordinates = requests.get(url, params = payload)
+
+		# Fill the coordinates into the input fields
+		if coordinates.status_code == 200:
+			coordinates = coordinates.json()
+
+			if (coordinates == []):
+				self.messages.setText("Start system not found!")
+				return False
+
+			self.start_x_input.setText(str(coordinates['coords']['x']))
+			self.start_y_input.setText(str(coordinates['coords']['y']))
+			self.start_z_input.setText(str(coordinates['coords']['z']))
+		else:
+			self.messages.setText("Start system not found!")
+			return False
+		
 		return True
 
+	# End system search action
+	def _end_search_action(self):
+		# Grab the system name
+		end_system = self.end_system.text().strip()
+
+		# Call EDSM API for the coordinates
+		url = 'https://www.edsm.net/api-v1/system'
+		payload = {'systemName':end_system, 'showCoordinates':1}
+		coordinates = requests.get(url, params = payload)
+
+		# Fill the coordinates into the input fields
+		if coordinates.status_code == 200:
+			coordinates = coordinates.json()
+
+			if (coordinates == []):
+				self.messages.setText("End system not found!")
+				return False
+
+			self.end_x_input.setText(str(coordinates['coords']['x']))
+			self.end_y_input.setText(str(coordinates['coords']['y']))
+			self.end_z_input.setText(str(coordinates['coords']['z']))
+		else:
+			self.messages.setText("End system not found!")
+			return False
+		
+		return True
+	
 
 	# Finally, the definition of all the stuff that needs to be done, when the 
 	# continue-button was pressed ... who would have thought that.
