@@ -122,7 +122,7 @@ class ScreenInput(QWidget):
 		setattr(self, 'end_system', QLineEdit())
 		self.layout.addWidget(getattr(self, 'end_system'), 7, 1)
 
-		self.end_search_button = QPushButton("Search for Start System")
+		self.end_search_button = QPushButton("Search for End System")
 		self.end_search_button.clicked.connect(self._end_search_action)
 		self.layout.addWidget(self.end_search_button, 7, 2)
 
