@@ -1,5 +1,24 @@
 package main
 
+//    Copyright 2019 Soren Heinze
+//    soerenheinze (at) gmx (dot) de
+//    5B1C 1897 560A EF50 F1EB 2579 2297 FAE4 D9B5 2A35
+
+//    Go port (c) 2023 Andrew van der Stock <vanderaj@gmail.com>
+
+//    This program is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, either version 3 of the License, or
+//    (at your option) any later version.
+//
+//    This program is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 import "fmt"
 
 // This is instantiated once and set at the starting node. If a node can send
@@ -66,16 +85,4 @@ func _add_jump_types(jumper *Jumper, this_distance int) {
 	}
 
 	(*jumper).jump_types = append((*jumper).jump_types, jump_types)
-}
-
-// A jumper needs to be initialized in the startnode.
-func create_jumper_at_start(start_star Star, all_nodes map[string]Node) {
-	var jumper Jumper
-	var visited []string = make([]string, 0)
-	visited = append(visited, start_star.Name)
-
-	initJumper(&jumper, visited, 4)
-
-	// all_nodes[start_star.Name].jumper = jumper
-	// all_nodes[start_star.Name].visited = true
 }

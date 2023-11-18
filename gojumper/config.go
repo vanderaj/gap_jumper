@@ -1,5 +1,20 @@
 package main
 
+//    Go port (c) 2023 Andrew van der Stock <vanderaj@gmail.com>
+
+//    This program is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, either version 3 of the License, or
+//    (at your option) any later version.
+//
+//    This program is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 import (
 	"encoding/json"
 	"flag"
@@ -56,19 +71,19 @@ func get_arguments() {
 	}
 
 	jumprange = flag.Float64("jumprange", 50, "Ship range with a full fuel tank (required)")
-	jumprange = flag.Float64("r", 50, "Ship range with a full fuel tank (required)")
+	jumprange = flag.Float64("jr", 50, "Ship range with a full fuel tank (required)")
 
 	range_on_fumes = flag.Float64("range-on-fumes", 0, "Ship range with fuel for one jump (defaults equal to range).")
 	range_on_fumes = flag.Float64("rf", 0, "Ship range with fuel for one jump (defaults equal to range).")
 
-	start_system = flag.String("start-system", "", "Name of the system to start routing from.")
-	dest_system = flag.String("dest-system", "", "Name of the system to end routing at.")
+	start_system = flag.String("start-system", "Hypuae Euq IO-Z d13-2", "Start system")
+	dest_system = flag.String("dest-system", "Hypuae Euq SY-S d3-0", "Destination system")
 
-	startcoords = flag.String("startcoords", "-5157.90625,-3.28125,-3291.5", "Galactic coordinates to start routing from. -s X Y Z")
-	startcoords = flag.String("s", "-5157.90625,-3.28125,-3291.5", "Galactic coordinates to start routing from. -s X Y Z")
+	startcoords = flag.String("startcoords", "7.375 54.875 -15165.53125", "Galactic coordinates to start routing from. -s X Y Z")
+	startcoords = flag.String("s", "7.375 54.875 -15165.53125", "Galactic coordinates to start routing from. -s X Y Z")
 
-	destcoords = flag.String("destcoords", "-5151.65625,2002.9375,-3295.375", "Galactic coordinates of target destination. -d X Y Z")
-	destcoords = flag.String("d", "-5151.65625,2002.9375,-3295.375", "Galactic coordinates of target destination. -d X Y Z")
+	destcoords = flag.String("destcoords", "101.5625 -22.46875 -16097.09375", "Galactic coordinates of target destination. -d X Y Z")
+	destcoords = flag.String("d", "101.5625 -22.46875 -16097.09375", "Galactic coordinates of target destination. -d X Y Z")
 
 	neutron_boosting = flag.Bool("neutron-boosting", true, "Utilize Neutron boosting. The necessary file will be downloaded automatically.")
 	neutron_boosting = flag.Bool("nb", true, "Utilize Neutron boosting. The necessary file will be downloaded automatically.")
