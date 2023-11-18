@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
@@ -29,8 +30,10 @@ var (
 	jumprange        *float64
 	range_on_fumes   *float64
 	startcoords      *string
+	start_system     *string
 	startcoord       Coord
 	destcoords       *string
+	dest_system      *string
 	destcoord        Coord
 	neutron_boosting *bool
 	cached           *bool
@@ -52,11 +55,14 @@ func get_arguments() {
 		usage()
 	}
 
-	jumprange = flag.Float64("jumprange", 0, "Ship range with a full fuel tank (required)")
-	jumprange = flag.Float64("r", 0, "Ship range with a full fuel tank (required)")
+	jumprange = flag.Float64("jumprange", 50, "Ship range with a full fuel tank (required)")
+	jumprange = flag.Float64("r", 50, "Ship range with a full fuel tank (required)")
 
 	range_on_fumes = flag.Float64("range-on-fumes", 0, "Ship range with fuel for one jump (defaults equal to range).")
 	range_on_fumes = flag.Float64("rf", 0, "Ship range with fuel for one jump (defaults equal to range).")
+
+	start_system = flag.String("start-system", "", "Name of the system to start routing from.")
+	dest_system = flag.String("dest-system", "", "Name of the system to end routing at.")
 
 	startcoords = flag.String("startcoords", "-5157.90625,-3.28125,-3291.5", "Galactic coordinates to start routing from. -s X Y Z")
 	startcoords = flag.String("s", "-5157.90625,-3.28125,-3291.5", "Galactic coordinates to start routing from. -s X Y Z")
@@ -87,49 +93,99 @@ func get_arguments() {
 		*jumprange = 50
 	}
 
-	// Convert comma separated start coords to float64
+	if *start_system != "" {
+		fmt.Println("Looking up start system: ", *start_system)
+		var err error
 
-	c := strings.Split(*startcoords, ",")
-	var err error
-	startcoord.X, err = strconv.ParseFloat(c[0], 64)
+		startcoord, err = get_star_coords(*start_system)
+		if err != nil {
+			fmt.Println("Could not obtain start system coordinates: ", *start_system)
+			os.Exit(1)
+		}
+		fmt.Println("Found start system coordinates: ", *start_system, " at ", startcoord)
+	} else {
+		// Convert comma separated start coords to float64
 
-	if err != nil {
-		fmt.Println("Error parsing start coordinates: ", err)
-		os.Exit(1)
+		c := strings.Split(*startcoords, ",")
+		var err error
+		startcoord.X, err = strconv.ParseFloat(c[0], 64)
+
+		if err != nil {
+			fmt.Println("Error parsing start coordinates: ", err)
+			os.Exit(1)
+		}
+
+		startcoord.Y, err = strconv.ParseFloat(c[1], 64)
+		if err != nil {
+			fmt.Println("Error parsing start coordinates: ", err)
+			os.Exit(1)
+		}
+
+		startcoord.Z, err = strconv.ParseFloat(c[2], 64)
+		if err != nil {
+			fmt.Println("Error parsing start coordinates: ", err)
+			os.Exit(1)
+		}
 	}
 
-	startcoord.Y, err = strconv.ParseFloat(c[1], 64)
+	if *dest_system != "" {
+		fmt.Println("Looking up destination system: ", *dest_system)
+		var err error
+
+		destcoord, err = get_star_coords(*dest_system)
+		if err != nil {
+			fmt.Println("Could not obtain destination system coordinates: ", *dest_system)
+			os.Exit(1)
+		}
+		fmt.Println("Found destination system coordinates: ", *dest_system, " at ", destcoord)
+	} else {
+
+		// Convert comma separated dest coords to float64
+		c := strings.Split(*destcoords, ",")
+		var err error
+
+		destcoord.X, err = strconv.ParseFloat(c[0], 64)
+
+		if err != nil {
+			fmt.Println("Error parsing dest coordinates: ", err)
+			os.Exit(1)
+		}
+
+		destcoord.Y, err = strconv.ParseFloat(c[1], 64)
+		if err != nil {
+			fmt.Println("Error parsing dest coordinates: ", err)
+			os.Exit(1)
+		}
+
+		destcoord.Z, err = strconv.ParseFloat(c[2], 64)
+		if err != nil {
+			fmt.Println("Error parsing dest coordinates: ", err)
+			os.Exit(1)
+		}
+	}
+}
+
+// Get the coordinates of a star system from EDSM
+func get_star_coords(system string) (Coord, error) {
+
+	// Build URL
+
+	// https://www.edsm.net/api-v1/system?systemName=Sol&showCoordinates=1
+	res, err := http.Get("https://www.edsm.net/api-v1/system?systemName=" + system + "&showCoordinates=1")
 	if err != nil {
-		fmt.Println("Error parsing start coordinates: ", err)
-		os.Exit(1)
+		log.Fatal(err)
+		return Coord{}, err
 	}
 
-	startcoord.Z, err = strconv.ParseFloat(c[2], 64)
-	if err != nil {
-		fmt.Println("Error parsing start coordinates: ", err)
-		os.Exit(1)
+	defer res.Body.Close()
+
+	var edsm_response EDSMSystemApiResponse
+
+	if err := json.NewDecoder(res.Body).Decode(&edsm_response); err != nil {
+		return Coord{}, err
 	}
 
-	// Convert comma separated dest coords to float64
-	c = strings.Split(*destcoords, ",")
-	destcoord.X, err = strconv.ParseFloat(c[0], 64)
-
-	if err != nil {
-		fmt.Println("Error parsing dest coordinates: ", err)
-		os.Exit(1)
-	}
-
-	destcoord.Y, err = strconv.ParseFloat(c[1], 64)
-	if err != nil {
-		fmt.Println("Error parsing dest coordinates: ", err)
-		os.Exit(1)
-	}
-
-	destcoord.Z, err = strconv.ParseFloat(c[2], 64)
-	if err != nil {
-		fmt.Println("Error parsing dest coordinates: ", err)
-		os.Exit(1)
-	}
+	return Coord{edsm_response.Coords.X, edsm_response.Coords.Y, edsm_response.Coords.Z}, nil
 }
 
 func download_url_file(fullURLFile string) {

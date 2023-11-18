@@ -4,6 +4,30 @@ type Coord struct {
 	X, Y, Z float64
 }
 
+type information struct {
+	Allegience   string `json:"allegience"`
+	Government   string `json:"government"`
+	Faction      string `json:"faction"`
+	FactionState string `json:"factionState"`
+	Population   int64  `json:"population"`
+	Security     string `json:"security"`
+	Economy      string `json:"economy"`
+}
+
+type primaryStar struct {
+	Type        string `json:"type"`
+	Name        string `json:"name"`
+	IsScoopable bool   `json:"isScoopable"`
+}
+
+type EDSMSystemApiResponse struct {
+	Name        string      `json:"name"`
+	Id          int64       `json:"id"`
+	Coords      rawCoord    `json:"coords"`
+	Information information `json:"information"`
+	PrimaryStar primaryStar `json:"primaryStar"`
+}
+
 type rawCoord struct {
 	X float64 `json:"x"`
 	Y float64 `json:"y"`
