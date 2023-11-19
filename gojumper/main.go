@@ -38,7 +38,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
+	"runtime"
+	"runtime/pprof"
 	"time"
 
 	"golang.org/x/text/language"
@@ -69,6 +72,31 @@ func main() {
 	fmt.Println("Using offline mode. ")
 
 	// 1. Read all systems, filtering relevant stars into a stars array, which we will serialize to a file.
+
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer f.Close()
+		if err := pprof.StartCPUProfile(f); err != nil {
+			log.Fatal("Could not start CPU profile:", err)
+
+		}
+		defer pprof.StopCPUProfile()
+	}
+
+	if *memprofile != "" {
+		f, err := os.Create(*memprofile)
+		if err != nil {
+			log.Fatal("could not create memory profile: ", err)
+		}
+		defer f.Close() // error handling omitted for example
+		runtime.GC()    // get up-to-date statistics
+		if err := pprof.WriteHeapProfile(f); err != nil {
+			log.Fatal("could not write memory profile: ", err)
+		}
+	}
 
 	var stars []Star
 	start := time.Now()
@@ -142,8 +170,39 @@ func main() {
 
 	all_nodes := create_nodes(stars)
 
+	pristine_nodes := make(map[string]Node, len(all_nodes))
+	// make a copy for later
+	for k, v := range all_nodes {
+		pristine_nodes[k] = v
+	}
+
 	p.Printf("Created %d nodes in %s.\n", len(all_nodes), time.Since(start))
 
 	// 3. Find a path
 	fmt.Println("Phase 3 - Find a path")
+
+	start_star, end_star := find_closest(stars, startcoord, destcoord)
+
+	fewest_jumps_jumper, way_back_jumper := find_path(*max_tries, stars,
+		start_star, end_star, all_nodes, *neutron_boosting)
+
+	// 4. Print the results
+
+	p.Printf("\n")
+	p.Printf("Start at: %s\n", start_star.Name)
+	p.Printf("  End at: %s\n", end_star.Name)
+	p.Printf("\nNumber of stars considered: %d\n", len(stars))
+
+	if *neutron_boosting {
+		p.Printf("\n\nATTENTION: Neutron boosted jumps are enabled BUT you need to make sure for yourself that you DON'T RUN OUT OF FUEL!")
+	}
+
+	print_jumper_information(pristine_nodes, fewest_jumps_jumper)
+
+	if *neutron_boosting && way_back_jumper == nil {
+		p.Printf("\n\nATTENTION: Neutron jumping may allow you to get to your goal BUT no way back could be found.\nHowever, you may still be able to find a way manually since not all systems are registered in the database.")
+	} else {
+		print("\nYou will be able to get back. This is ONE possible way back.\n")
+		print_jumper_information(pristine_nodes, way_back_jumper)
+	}
 }

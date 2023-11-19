@@ -56,6 +56,8 @@ var (
 	max_tries        *int
 	verbose          *bool
 	onlinemode       *bool
+	cpuprofile       *string
+	memprofile       *string
 )
 
 func usage() {
@@ -99,6 +101,9 @@ func get_arguments() {
 
 	verbose = flag.Bool("verbose", false, "Enable verbose logging")
 	verbose = flag.Bool("v", false, "Enable verbose logging")
+
+	cpuprofile = flag.String("cpuprofile", "", "Writes cpu profile to file")
+	memprofile = flag.String("memprofile", "", "Writes memory profile to file")
 
 	flag.Parse()
 
@@ -178,6 +183,7 @@ func get_arguments() {
 			os.Exit(1)
 		}
 	}
+
 }
 
 // Get the coordinates of a star system from EDSM

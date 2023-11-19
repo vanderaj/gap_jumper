@@ -94,14 +94,14 @@ type Jumper struct {
 	scoop_stops []string
 	notes       []string
 	jump_types  []string
-	distances   []int
+	distances   []float64
 	// See comment in additional_functions.py => explore_path() what
 	// this is about. And yes, i know that magick is written wrong.
 	magick_fuel_at []string
 }
 
 type Data struct {
-	fewest_jumps_jumper Jumper
+	fewest_jumps_jumper *Jumper
 	fewest_jumps        int
 	level_3_boosts      int
 	level_2_boosts      int

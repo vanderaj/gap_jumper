@@ -19,7 +19,10 @@ package main
 //    You should have received a copy of the GNU General Public License
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import "fmt"
+import (
+	"fmt"
+	"math"
+)
 
 // This is instantiated once and set at the starting node. If a node can send
 // out jumpers, it deepcopies its jumper and sets the new jumper to the nodes to
@@ -48,20 +51,22 @@ func initJumper(jumper *Jumper, visited_systems []string, max_jumps int) {
 	(*jumper).jump_types = make([]string, 0)
 	(*jumper).jump_types = append((*jumper).jump_types, "start")
 	// The distanced between the systems visited. User visible
-	(*jumper).distances = make([]int, 0)
+	(*jumper).distances = make([]float64, 0)
 	(*jumper).distances = append((*jumper).distances, 0)
 }
 
-// 	In the output, the type of boost required for a jump is indicated by a
-//  "B" followed by the number of the boost type.
+//		In the output, the type of boost required for a jump is indicated by a
+//	 "B" followed by the number of the boost type.
+//
 // 0 - no FSD boost
 // 1 - basic FSD boost
 // 2 - standard FSD boost
 // 3 - premium FSD boost
 // If the jump is on fumes, "F" is added.
 // If the jump is a neutron boost, "neutron" is added.
-// 	For example, a jump of 4.5 light years would be indicated as "B0", whereas
-//  a jump of 255 light years would be indicated as "neutron".
+//
+//		For example, a jump of 4.5 light years would be indicated as "B0", whereas
+//	 a jump of 255 light years would be indicated as "neutron".
 func _add_jump_types(jumper *Jumper, this_distance int) {
 
 	boost_type := int(this_distance / 2)
@@ -85,4 +90,70 @@ func _add_jump_types(jumper *Jumper, this_distance int) {
 	}
 
 	(*jumper).jump_types = append((*jumper).jump_types, jump_types)
+}
+
+func roundFloat(val float64, precision uint) float64 {
+	ratio := math.Pow(10, float64(precision))
+	return math.Round(val*ratio) / ratio
+}
+
+// Just to print the complete path information in a pretty way.
+func pretty_print(jumper *Jumper) string {
+	text := ""
+
+	vs := jumper.visited_systems
+	jt := jumper.jump_types
+	df := jumper.distances
+
+	for i := 0; i < len(vs); i++ {
+		starname := vs[i]
+		jump_type := jt[i]
+		distance := roundFloat(df[i], 2)
+
+		this := fmt.Sprintf("%s   =>   %.2f   =>   %s\n", starname, distance, jump_type)
+		text = text + this
+	}
+
+	return text
+}
+
+// To print the information about the path in a good way.
+func print_jumper_information(pristine_nodes map[string]Node, fewest_jumps_jumper *Jumper) {
+	if fewest_jumps_jumper != nil {
+		var neutron_boosts, level_3_boosts, level_2_boosts, level_1_boosts int
+
+		jump_types := fewest_jumps_jumper.jump_types
+		number_jumps := len(fewest_jumps_jumper.visited_systems)
+
+		// Count the number of boosts within the jumper structure
+		for i := range jump_types {
+
+			if jump_types[i] == "neutron" {
+				neutron_boosts++
+			}
+
+			if jump_types[i] == "B3" || jump_types[i] == "B3F" {
+				level_3_boosts++
+			}
+
+			if jump_types[i] == "B2" || jump_types[i] == "B2F" {
+				level_2_boosts++
+			}
+
+			if jump_types[i] == "B1" || jump_types[i] == "B1F" {
+				level_1_boosts++
+			}
+		}
+
+		var this, info string
+
+		this = "Fewest jumps: "
+		that := fmt.Sprintf("%d with %d neutron boosts, ", number_jumps, neutron_boosts)
+		siht := fmt.Sprintf("%d grade 3 boosts, %d ", level_3_boosts, level_2_boosts)
+		tath := fmt.Sprintf("grade 2 boosts, %d grade 1 boosts.\n\n", level_1_boosts)
+		info = pretty_print(fewest_jumps_jumper)
+
+		fmt.Printf(this + that + siht + tath + info)
+
+	}
 }

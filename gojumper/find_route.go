@@ -25,20 +25,23 @@ import "fmt"
 //  This file contains function in connection with the actual algorithm to find
 //  a route. It exists mainly to keep other files a bit more tidy.
 
-// 	I use the older, non-multithreaded version of the algorithm. The reason is
+// 	ajv: I use the older, non-multithreaded version of the algorithm. The reason is
 //  that I think that the multithreaded version is not readily portable to Go.
-//  I may be wrong, but I don't want to spend time on this right now.
+//  First correct, then fast
 
 // A jumper needs to be initialized in the startnode.
 func create_jumper_at_start(start_star Star, all_nodes map[string]Node) {
-	var jumper Jumper
-	var visited []string = make([]string, 0)
+	var jumper *Jumper = new(Jumper)
+	var visited []string = make([]string, 1)
 	visited = append(visited, start_star.Name)
 
-	initJumper(&jumper, visited, 4)
+	initJumper(jumper, visited, 4)
 
-	all_nodes[start_star.Name].jumper = jumper
-	all_nodes[start_star.Name].visited = true
+	if entry, ok := all_nodes[start_star.Name]; ok {
+		entry.jumper = jumper
+		entry.visited = true
+		all_nodes[start_star.Name] = entry
+	}
 }
 
 //  The following function will never be triggered since all stars are considered
@@ -107,7 +110,7 @@ func get_nodes_that_can_send_jumpers(all_nodes map[string]Node, this_distance in
 }
 
 //  This does all the above and finds a way from start to end (or not).
-func explore_path(all_nodes map[string]Node, stars, final_node Node) {
+func explore_path(all_nodes map[string]Node, stars []Star, final_node Node) {
 	//  This is the index of the possible jump distances in the
 	//  jump_distances-attribute of the Node-class.
 	// this_distance = 0
@@ -237,14 +240,13 @@ func better_jumper(i int, max_tries int, jumper Jumper, data Data) Data {
 
 //  This is the main loop, that will search for the shortest and for the most
 //  economic path as often as < max_tries >.
-func find_path(max_tries int, stars []Star, start_star Star, end_star Star,
-	pristine_nodes map[string]Node, neutron_boosting bool) {
+func find_path(max_tries int, stars []Star, start_star Star, end_star Star, pristine_nodes map[string]Node, neutron_boosting bool) (*Jumper, *Jumper) {
 	// This is just for the case that neutron boosting is allowed.
-	var way_back_jumper Jumper
+	var way_back_jumper *Jumper
 	var all_nodes map[string]Node = make(map[string]Node)
 
 	final_name := end_star.Name
-	var fewest_jumps_jumper Jumper
+	var fewest_jumps_jumper *Jumper = new(Jumper)
 	fewest_jumps := 99999
 	level_3_boosts := 99999
 	level_2_boosts := 99999
@@ -267,21 +269,26 @@ func find_path(max_tries int, stars []Star, start_star Star, end_star Star,
 
 		explore_path(all_nodes, stars, final_node)
 
-		var jumper Jumper
+		var jumper *Jumper
 		if final_node.visited {
 			jumper = final_node.jumper
 		} else {
 			jumper = nil
 		}
 
-		// 	if jumper and neutron_boosting and not way_back_jumper:
-		// 		//  Since < all_nodes > is modified in explore_path I need to get the
-		// 		//  pristine nodes again.
-		// 		all_nodes = deepcopy(pristine_nodes)
-		// 		way_back_jumper = way_back(all_nodes, stars, start_star, end_star)
+		if jumper != nil && neutron_boosting && way_back_jumper != nil {
+			//  Since < all_nodes > is modified in explore_path I need to get the
+			//  pristine nodes again.
+			// all_nodes = deepcopy(pristine_nodes)
+			for k, v := range pristine_nodes {
+				all_nodes[k] = v
+			}
 
-		if jumper {
-			data = better_jumper(i, max_tries, jumper, data)
+			way_back_jumper = way_back(all_nodes, stars, start_star, end_star)
+		}
+
+		if jumper != nil {
+			data = better_jumper(i, max_tries, *jumper, data)
 		} else {
 			fmt.Printf("Try %d of %d. Could NOT find a path.\n", i, max_tries)
 		}
@@ -290,43 +297,6 @@ func find_path(max_tries int, stars []Star, start_star Star, end_star Star,
 	fewest_jumps_jumper = data.fewest_jumps_jumper
 
 	return fewest_jumps_jumper, way_back_jumper
-}
-
-//  This function takes the points of a route and tries to figure out if there
-//  are jumps that could have been avoided. E.g., instead of jumping 1 => 2 => 3
-//  if a direct jump 1 => 3 would have been possible.
-//  If yes, the unnecessary step will be deleted.
-//  However, all of this is done just within regular jump distance.
-//
-//  ATTENTION: After some testing it turned out that the original algorithm is
-//  already really good. The difference between running this function or not was
-//  never larger than 1 jump. Thus I decided not to use it.
-//  However, I think that it may be useful to have in the future, thus I keep it.
-func find_more_direct_way(final_node Node, all_nodes map[string]Node) {
-	// visited = deepcopy(final_node.jumper.visited_systems)
-	// jump_types = deepcopy(final_node.jumper.jump_types)
-
-	// i = 0
-	// length = len(visited)
-	// while i < length - 1:
-	// 	starname = visited[i]
-	// 	node = all_nodes[starname]
-
-	// 	//  Since visited is an ordered list, can I just check if a star further
-	// 	//  away but within regular jump range exists.
-	// 	j = i + 2
-	// 	while j < length:
-	// 		try_to_jump_to = visited[j]
-	// 		if try_to_jump_to in node.reachable[0]:
-	// 			del visited[j - 1]
-	// 			del jump_types[j - 1]
-	// 			length -= 1
-	// 			j -= 1
-	// 		j += 1
-	// 	i += 1
-
-	// final_node.jumper.visited_systems = visited
-	// final_node.jumper.jump_types = jump_types
 }
 
 //  If neutron boosting is allowed a pilot can in principle get stuck. This is
