@@ -80,6 +80,7 @@ type Node struct {
 	can_jump_to []string
 	reachable   map[int][]string
 	jumper      *Jumper
+	neutron     bool
 }
 type Jumper struct {
 	// The list with all the systems visited by this jumper.

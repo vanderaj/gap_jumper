@@ -11,3 +11,4 @@ __pycache__/*
 venv/*
 systemsWithCoordinates.json
 systemsWithCoordinates.json.gz
+gojumper/cpuprof
