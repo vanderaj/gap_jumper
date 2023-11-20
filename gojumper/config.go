@@ -99,8 +99,8 @@ func get_arguments() {
 	max_tries = flag.Int("max-tries", 23, "How many times to shuffle and reroute before returning best result (default 23).")
 	max_tries = flag.Int("N", 23, "How many times to shuffle and reroute before returning best result (default 23).")
 
-	verbose = flag.Bool("verbose", false, "Enable verbose logging")
-	verbose = flag.Bool("v", false, "Enable verbose logging")
+	verbose = flag.Bool("verbose", true, "Enable verbose logging")
+	verbose = flag.Bool("v", true, "Enable verbose logging")
 
 	cpuprofile = flag.String("cpuprofile", "", "Writes cpu profile to file")
 	memprofile = flag.String("memprofile", "", "Writes memory profile to file")

@@ -277,6 +277,10 @@ func better_jumper(i int, max_tries int, jumper Jumper, data Data) Data {
 // This is the main loop, that will search for the shortest and for the most
 // economic path as often as < max_tries >.
 func find_path(max_tries int, stars []Star, start_star Star, end_star Star, pristine_nodes map[string]Node, neutron_boosting bool) (*Jumper, *Jumper) {
+	if *verbose {
+		fmt.Println("Finding a path.")
+	}
+
 	// This is just for the case that neutron boosting is allowed.
 	var way_back_jumper *Jumper
 	var all_nodes map[string]Node = make(map[string]Node)

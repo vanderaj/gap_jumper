@@ -142,6 +142,10 @@ func distance_within_500_Ly_from_line(start_coords Coord, end_coords Coord, star
 // coordinates from the ingame starmap. This function finds the actual
 // (known) stars which are closest to the given positions.
 func find_closest(stars []Star, start_coords Coord, end_coords Coord) (start_star Star, end_star Star) {
+	if *verbose {
+		fmt.Println("Finding closest stars to start- and end-coordinates.")
+	}
+
 	start_distance := 9999999999999.0
 	end_distance := 9999999999999.0
 
