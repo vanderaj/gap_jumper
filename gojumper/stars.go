@@ -57,10 +57,6 @@ func starsfile_compressed() bool {
 	return true
 }
 
-func uncompress_starsfile() {
-	fmt.Println(("Uncompressing starsfile is not yet implemented."))
-}
-
 func download_stars_file() {
 	download_url_file("https://www.edsm.net/dump/systemsWithCoordinates.json.gz")
 }
@@ -141,7 +137,7 @@ func distance_within_500_Ly_from_line(start_coords Coord, end_coords Coord, star
 // The start- and endpoint are likely unknown stars or just approximate
 // coordinates from the ingame starmap. This function finds the actual
 // (known) stars which are closest to the given positions.
-func find_closest(stars []Star, start_coords Coord, end_coords Coord) (start_star Star, end_star Star) {
+func find_closest(stars *[]Star, start_coords Coord, end_coords Coord) (start_star Star, end_star Star) {
 	if *verbose {
 		fmt.Println("Finding closest stars to start- and end-coordinates.")
 	}
@@ -152,7 +148,7 @@ func find_closest(stars []Star, start_coords Coord, end_coords Coord) (start_sta
 	var startStar Star
 	var endStar Star
 
-	for _, star := range stars {
+	for _, star := range *stars {
 		distance_to_start := distance_to_point(start_coords, star.Star_coords)
 		distance_to_end := distance_to_point(end_coords, star.Star_coords)
 

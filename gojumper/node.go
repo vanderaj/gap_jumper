@@ -33,7 +33,7 @@ import (
 // ATTENTION: < jump_distances > must have 0 (zero) as the very first value
 // and elements with even indice (e.g. element 3 => index 2) need to be
 // jump length when running on fumes. _find_reachable_stars() depends on that!
-func initNode(node *Node, data Star, all_stars []Star) {
+func initNode(node *Node, data Star, all_stars *[]Star) {
 
 	(*node).name = data.Name
 
@@ -86,12 +86,11 @@ func initNode(node *Node, data Star, all_stars []Star) {
 
 // This takes in all the star-data and creates node-objects.
 // < screen > is the instance of class ScreenWork() that calls this function.
-func create_nodes(stars []Star) map[string]Node {
+func create_nodes(stars *[]Star) map[string]Node {
 
-	// Let's make room for about 30,000 nodes, this should be enough for many
-	all_nodes := make(map[string]Node, 30000)
+	all_nodes := make(map[string]Node, len(*stars))
 
-	for _, data := range stars {
+	for _, data := range *stars {
 		node := Node{}
 
 		// As Go doesn't have classes, we will call the functions individually, updating the node
@@ -152,9 +151,9 @@ func _in_box(node *Node, second_star_data Star) bool {
 // # This function finds all stars within the range(s) of the starship in use.
 // # < jump_distances > is a list with all the possible jump distances and
 // # zero as the first element. See also comment to __init__().
-func _find_reachable_stars(node *Node, all_stars []Star) {
+func _find_reachable_stars(node *Node, all_stars *[]Star) {
 
-	for _, data := range all_stars {
+	for _, data := range *all_stars {
 		// Don't do all the calculations if the star couldn't be
 		// reached anyway.
 		// ATTENTION: Since the sphere around this node is smaller than the

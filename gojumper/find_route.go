@@ -38,7 +38,7 @@ func create_jumper_at_start(start_star Star, all_nodes *map[string]Node) {
 		fmt.Println("create_jumper_at_start.")
 	}
 	var jumper *Jumper = new(Jumper)
-	var visited []string = make([]string, 1)
+	var visited []string = make([]string, 0)
 	visited = append(visited, start_star.Name)
 
 	initJumper(jumper, visited, 4)
@@ -129,7 +129,7 @@ func get_nodes_that_can_send_jumpers(all_nodes *map[string]Node, this_distance i
 }
 
 // This does all the above and finds a way from start to end (or not).
-func explore_path(all_nodes *map[string]Node, stars []Star, final_node_name string) {
+func explore_path(all_nodes *map[string]Node, stars *[]Star, final_node_name string) {
 	if *verbose {
 		fmt.Println("explore_path()")
 	}
@@ -142,7 +142,7 @@ func explore_path(all_nodes *map[string]Node, stars []Star, final_node_name stri
 
 	var max_nodes = len(*all_nodes)
 
-	for !(*all_nodes)[final_node_name].visited || j > max_nodes {
+	for !(*all_nodes)[final_node_name].visited && j < max_nodes {
 		j++
 		starnames := get_nodes_that_can_send_jumpers(all_nodes, this_distance)
 
@@ -290,7 +290,7 @@ func better_jumper(i int, max_tries int, jumper Jumper, data Data) Data {
 
 // This is the main loop, that will search for the shortest and for the most
 // economic path as often as < max_tries >.
-func find_path(max_tries int, stars []Star, start_star Star, end_star Star, pristine_nodes *map[string]Node, neutron_boosting bool) (*Jumper, *Jumper) {
+func find_path(max_tries int, stars *[]Star, start_star Star, end_star Star, pristine_nodes *map[string]Node, neutron_boosting bool) (*Jumper, *Jumper) {
 	if *verbose {
 		fmt.Println("Finding a path.")
 	}
@@ -365,7 +365,7 @@ func find_path(max_tries int, stars []Star, start_star Star, end_star Star, pris
 // < all_nodes > are all pristine nodes
 // < start_star > and < end_star > are the _actual_ start and goal. The
 // switching will take place inside this function.
-func way_back(all_nodes *map[string]Node, stars []Star, start_star Star, end_star Star) *Jumper {
+func way_back(all_nodes *map[string]Node, stars *[]Star, start_star Star, end_star Star) *Jumper {
 
 	create_jumper_at_start(end_star, all_nodes)
 

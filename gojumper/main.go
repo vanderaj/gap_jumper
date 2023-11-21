@@ -56,20 +56,21 @@ func main() {
 	// Used to format numbers with locale specific separators.
 	p := message.NewPrinter(language.English)
 
-	fmt.Println("gojumper v0.1.0")
+	p.Println("gojumper v0.1.0")
 
 	get_arguments()
 
-	fmt.Println("jumprange: ", *jumprange)
-	fmt.Println("Start: ", startcoord)
-	fmt.Println("Destination: ", destcoord)
-
-	if *onlinemode {
-		fmt.Println("Online mode is not supported. Falling back to stars file.")
-		*onlinemode = false
+	if *verbose {
+		fmt.Println("jumprange: ", *jumprange)
+		fmt.Println("range_on_fumes: ", *range_on_fumes)
+		fmt.Println("Start: ", startcoord)
+		fmt.Println("Destination: ", destcoord)
+		fmt.Println("Max tries: ", *max_tries)
+		fmt.Println("Neutron boosting: ", *neutron_boosting)
+		fmt.Println("Cached: ", *cached)
+		fmt.Println("Stars file: ", *starsfile)
+		fmt.Println("Verbose: ", *verbose)
 	}
-
-	fmt.Println("Using offline mode. ")
 
 	// 1. Read all systems, filtering relevant stars into a stars array, which we will serialize to a file.
 
@@ -81,9 +82,12 @@ func main() {
 		defer f.Close()
 		if err := pprof.StartCPUProfile(f); err != nil {
 			log.Fatal("Could not start CPU profile:", err)
-
 		}
 		defer pprof.StopCPUProfile()
+
+		if *verbose {
+			fmt.Println("CPU profiling enabled")
+		}
 	}
 
 	if *memprofile != "" {
@@ -96,30 +100,37 @@ func main() {
 		if err := pprof.WriteHeapProfile(f); err != nil {
 			log.Fatal("could not write memory profile: ", err)
 		}
+
+		if *verbose {
+			fmt.Println("Memory profiling enabled")
+		}
 	}
 
+	fmt.Println("Phase 1 - Reading stars")
 	var stars []Star
 	start := time.Now()
 	if *cached {
-		fmt.Println("Using stars.json cache file")
+		if *verbose {
+			fmt.Println("Using stars.json cache file")
+		}
+
 		stars = find_systems_cached()
 	}
 
 	if !*cached || len(stars) == 0 {
 		if len(*starsfile) > 0 {
-			if starsfile_ok() {
-				fmt.Printf("Using %s offline systems file\n", *starsfile)
-			} else {
+			if !starsfile_ok() {
 				if starsfile_compressed() {
-					fmt.Printf("Systems file %s is compressed. Uncompressing now...\n", *starsfile)
-					uncompress_starsfile()
+					fmt.Printf("Systems file %s is compressed. Decompress the file and try again.\n", *starsfile)
+					os.Exit(1)
 				} else {
-					fmt.Printf("Systems file %s is out of date or missing. Downloading a new one...\n", *starsfile)
+					fmt.Printf("Systems file %s is out of date or missing. Downloading a new one will take a while...\n", *starsfile)
 					download_stars_file()
 				}
 			}
 		}
-		fmt.Println("Loading stars from ", *starsfile)
+
+		fmt.Printf("Loading stars from %s\nThis will take a while.", *starsfile)
 		stars = find_systems_offline()
 
 		if *neutron_boosting {
@@ -137,19 +148,25 @@ func main() {
 			neutron_stars := find_neutron_stars_offline(neutronfile)
 			neutrons := update_stars_with_neutrons(&stars, neutron_stars)
 
-			p.Printf("Completed reading %d neutrons, and found %d relevant neutrons.\n", len(neutron_stars), neutrons)
+			if *verbose {
+				p.Printf("Completed reading %d neutrons, and found %d relevant neutrons.\n", len(neutron_stars), neutrons)
+			}
 		}
 
 		// Serialize the stars to a cache file
 		starCachefile, _ := json.MarshalIndent(stars, "", " ")
 		_ = os.WriteFile("stars.json", starCachefile, 0644)
-		fmt.Println("Wrote stars to stars.json")
+		if *verbose {
+			fmt.Println("Wrote stars to stars.json")
+		}
 	}
 
-	p.Printf("Found %d relevant stars in %s.\n", len(stars), time.Since(start))
+	if *verbose {
+		p.Printf("Found %d relevant stars in %s.\n", len(stars), time.Since(start))
+	}
 
 	// 2. prepare for pathfinding
-	fmt.Println("Phase 2 - preparing for pathfinding")
+	fmt.Println("Phase 2 - Pathfinding Preparation")
 	start = time.Now()
 	// jump distances array
 
@@ -168,22 +185,24 @@ func main() {
 	jump_distances[8] = *range_on_fumes * 2
 	jump_distances[9] = *jumprange * 4 // Neutron
 
-	all_nodes := create_nodes(stars)
+	all_nodes := create_nodes(&stars)
 
-	pristine_nodes := make(map[string]Node, len(all_nodes))
-	// make a copy for later
-	for k, v := range all_nodes {
-		pristine_nodes[k] = v
+	// pristine_nodes := make(map[string]Node, len(all_nodes))
+	// // make a copy for later
+	// for k, v := range all_nodes {
+	// 	pristine_nodes[k] = v
+	// }
+
+	if *verbose {
+		p.Printf("Created %d nodes in %s.\n", len(all_nodes), time.Since(start))
 	}
-
-	p.Printf("Created %d nodes in %s.\n", len(all_nodes), time.Since(start))
 
 	// 3. Find a path
 	fmt.Println("Phase 3 - Find a path")
 
-	start_star, end_star := find_closest(stars, startcoord, destcoord)
+	start_star, end_star := find_closest(&stars, startcoord, destcoord)
 
-	fewest_jumps_jumper, way_back_jumper := find_path(*max_tries, stars,
+	fewest_jumps_jumper, way_back_jumper := find_path(*max_tries, &stars,
 		start_star, end_star, &all_nodes, *neutron_boosting)
 
 	// 4. Print the results
@@ -194,15 +213,15 @@ func main() {
 	p.Printf("\nNumber of stars considered: %d\n", len(stars))
 
 	if *neutron_boosting {
-		p.Printf("\n\nATTENTION: Neutron boosted jumps are enabled BUT you need to make sure for yourself that you DON'T RUN OUT OF FUEL!")
+		p.Printf("\nATTENTION: Neutron boosted jumps are enabled BUT you need to make sure for yourself that you DON'T RUN OUT OF FUEL!\n\n")
 	}
 
-	print_jumper_information(pristine_nodes, fewest_jumps_jumper)
+	print_jumper_information(fewest_jumps_jumper)
 
 	if *neutron_boosting && way_back_jumper == nil {
-		p.Printf("\n\nATTENTION: Neutron jumping may allow you to get to your goal BUT no way back could be found.\nHowever, you may still be able to find a way manually since not all systems are registered in the database.")
+		p.Printf("\nATTENTION: Neutron jumping may allow you to get to your goal BUT no way back could be found.\nHowever, you may still be able to find a way manually since not all systems are registered in the database.\n")
 	} else {
 		print("\nYou will be able to get back. This is ONE possible way back.\n")
-		print_jumper_information(pristine_nodes, way_back_jumper)
+		print_jumper_information(way_back_jumper)
 	}
 }

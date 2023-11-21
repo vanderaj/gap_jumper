@@ -117,7 +117,7 @@ func pretty_print(jumper *Jumper) string {
 }
 
 // To print the information about the path in a good way.
-func print_jumper_information(pristine_nodes map[string]Node, fewest_jumps_jumper *Jumper) {
+func print_jumper_information(fewest_jumps_jumper *Jumper) {
 	if fewest_jumps_jumper != nil {
 		var neutron_boosts, level_3_boosts, level_2_boosts, level_1_boosts int
 

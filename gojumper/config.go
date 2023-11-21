@@ -34,11 +34,7 @@ import (
 const (
 	description string = `You want to directly cross from one spiral arm of the 
 galaxy to another but there is this giant gap between them? 
-This program helps you to find a way.
-
-Default behavior is to use the EDSM API to load stars on-demand. Use
-the -starsfile option if you have downloaded the systemsWithCoordinates.json
-nigthly dump from EDSM.`
+This program helps you to find a way.`
 )
 
 var (
@@ -55,15 +51,14 @@ var (
 	starsfile        *string
 	max_tries        *int
 	verbose          *bool
-	onlinemode       *bool
 	cpuprofile       *string
 	memprofile       *string
 )
 
 func usage() {
+	fmt.Println()
 	fmt.Println(description)
-	fmt.Println("\nSee README.md for further information.")
-	// os.Exit(0)
+	fmt.Printf("\nSee README.md for further information.\n")
 }
 
 // In this function the command line arguments are "processed".
@@ -71,6 +66,8 @@ func get_arguments() {
 	if len(os.Args) == 1 {
 		usage()
 	}
+
+	fmt.Printf("\nParsing command line arguments...\n\n")
 
 	jumprange = flag.Float64("jumprange", 50, "Ship range with a full fuel tank (required)")
 	jumprange = flag.Float64("jr", 50, "Ship range with a full fuel tank (required)")
@@ -81,10 +78,10 @@ func get_arguments() {
 	start_system = flag.String("start-system", "Hypuae Euq IO-Z d13-2", "Start system")
 	dest_system = flag.String("dest-system", "Hypuae Euq SY-S d3-0", "Destination system")
 
-	startcoords = flag.String("startcoords", "7.375 54.875 -15165.53125", "Galactic coordinates to start routing from. -s X Y Z")
+	startcoords = flag.String("startcoords", "7.375 54.875 -15165.53125", "Galactic coordinates to start routing from. -startcoords X Y Z")
 	startcoords = flag.String("s", "7.375 54.875 -15165.53125", "Galactic coordinates to start routing from. -s X Y Z")
 
-	destcoords = flag.String("destcoords", "101.5625 -22.46875 -16097.09375", "Galactic coordinates of target destination. -d X Y Z")
+	destcoords = flag.String("destcoords", "101.5625 -22.46875 -16097.09375", "Galactic coordinates of target destination. -destcoords X Y Z")
 	destcoords = flag.String("d", "101.5625 -22.46875 -16097.09375", "Galactic coordinates of target destination. -d X Y Z")
 
 	neutron_boosting = flag.Bool("neutron-boosting", true, "Utilize Neutron boosting. The necessary file will be downloaded automatically.")
@@ -93,8 +90,6 @@ func get_arguments() {
 	cached = flag.Bool("cached", true, "Reuse nodes data from previous run")
 
 	starsfile = flag.String("starsfile", "systemsWithCoordinates.json", "Path to EDSM system coordinates JSON file.")
-
-	onlinemode = flag.Bool("onlinemode", false, "Use EDSM API to load stars on-demand. (not currently supported)")
 
 	max_tries = flag.Int("max-tries", 23, "How many times to shuffle and reroute before returning best result (default 23).")
 	max_tries = flag.Int("N", 23, "How many times to shuffle and reroute before returning best result (default 23).")
@@ -106,6 +101,10 @@ func get_arguments() {
 	memprofile = flag.String("memprofile", "", "Writes memory profile to file")
 
 	flag.Parse()
+
+	if *verbose {
+		fmt.Println("Verbose mode enabled.")
+	}
 
 	// check if range > 0
 	if *jumprange <= 0 {
