@@ -64,15 +64,15 @@ func download_neutron_file() {
 // < stars > is the dict with the information about said stars.
 // < neutron_stars > is the set with the id's of the systems that contain
 // neutron stars.
-func update_stars_with_neutrons(stars []Star, neutron_stars map[int]Star) int {
+func update_stars_with_neutrons(stars *[]Star, neutron_stars map[int]Star) int {
 
 	var star Star
 	var index int
 	var neutrons int
 
-	for index, star = range stars {
+	for index, star = range *stars {
 		if star.ID == neutron_stars[star.ID].ID {
-			stars[index].Neutron = true
+			(*stars)[index].Neutron = true
 			neutrons++
 		}
 	}

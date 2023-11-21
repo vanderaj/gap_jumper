@@ -135,7 +135,7 @@ func main() {
 			}
 
 			neutron_stars := find_neutron_stars_offline(neutronfile)
-			neutrons := update_stars_with_neutrons(stars, neutron_stars)
+			neutrons := update_stars_with_neutrons(&stars, neutron_stars)
 
 			p.Printf("Completed reading %d neutrons, and found %d relevant neutrons.\n", len(neutron_stars), neutrons)
 		}
