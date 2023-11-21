@@ -45,7 +45,6 @@ func initJumper(jumper *Jumper, visited_systems []string, max_jumps int) {
 	// See comment in additional_functions.py => explore_path() what
 	// this is about. And yes, i know that magick is written wrong.
 	(*jumper).magick_fuel_at = make([]string, 0)
-	(*jumper).on_fumes = make([]string, 0)
 	// This list will contain what kind of jump was done, e.g., 'B1F' for a
 	// "grade 1 boosted jump on fumes". User visible
 	(*jumper).jump_types = make([]string, 0)

@@ -184,7 +184,7 @@ func main() {
 	start_star, end_star := find_closest(stars, startcoord, destcoord)
 
 	fewest_jumps_jumper, way_back_jumper := find_path(*max_tries, stars,
-		start_star, end_star, all_nodes, *neutron_boosting)
+		start_star, end_star, &all_nodes, *neutron_boosting)
 
 	// 4. Print the results
 
