@@ -87,8 +87,6 @@ func initNode(node *Node, data Star, all_stars *[]Star) {
 // This takes in all the star-data and creates node-objects.
 func create_nodes(stars *[]Star) {
 
-	local_nodes := make(map[string]Node, len(*stars))
-
 	for _, data := range *stars {
 		node := Node{}
 

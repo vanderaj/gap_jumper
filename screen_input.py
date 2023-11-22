@@ -23,6 +23,7 @@ from PyQt5.QtWidgets import QWidget, QGridLayout, QLabel, QLineEdit, QPushButton
 import os
 import json
 import requests
+import additional_functions as af
 
 # The class definition of the the user input layer of the main window.
 class ScreenInput(QWidget):

@@ -12,3 +12,5 @@ systemsWithCoordinates.json
 systemsWithCoordinates.json.gz
 venv/*
 gojumper/cpuprof
+all_nodes
+stars

@@ -49,7 +49,6 @@ func create_jumper_at_start(start_star Star) Node {
 	if entry, ok = local_nodes[start_star.Name]; ok {
 		entry.jumper = jumper
 		entry.visited = true
-		local_nodes[start_star.Name] = entry
 	}
 
 	return entry

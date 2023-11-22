@@ -192,10 +192,11 @@ func main() {
 	jump_distances[9] = *jumprange * 4 // Neutron
 
 	/* local_nodes = */
+	local_nodes = make(map[string]Node, len(stars))
 	create_nodes(&stars)
 
 	// take a copy of the pristine nodes for later use
-	pristine_nodes = make(map[string]Node, len(local_nodes))
+	pristine_nodes = make(map[string]Node, len(stars))
 	for k, v := range local_nodes {
 		pristine_nodes[k] = v
 	}
