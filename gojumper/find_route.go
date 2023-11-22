@@ -33,7 +33,7 @@ import (
 //  First correct, then fast
 
 // A jumper needs to be initialized in the startnode.
-func create_jumper_at_start(start_star Star, all_nodes *map[string]Node) {
+func create_jumper_at_start(start_star Star) Node {
 	if *verbose {
 		fmt.Println("create_jumper_at_start.")
 	}
@@ -43,11 +43,16 @@ func create_jumper_at_start(start_star Star, all_nodes *map[string]Node) {
 
 	initJumper(jumper, visited, 4)
 
-	if entry, ok := (*all_nodes)[start_star.Name]; ok {
+	var entry Node
+	var ok bool
+
+	if entry, ok = local_nodes[start_star.Name]; ok {
 		entry.jumper = jumper
 		entry.visited = true
-		(*all_nodes)[start_star.Name] = entry
+		local_nodes[start_star.Name] = entry
 	}
+
+	return entry
 }
 
 // The following function will never be triggered since all stars are considered
@@ -66,12 +71,12 @@ func create_jumper_at_start(start_star Star, all_nodes *map[string]Node) {
 // jumper fuel for one additional jump so that it can cross the gap to the
 // next (unscoopable) star and hope that after that a star exists that can be
 // used for refill.
-func refuel_stuck_jumpers(all_nodes *map[string]Node) {
+func refuel_stuck_jumpers() {
 	if *verbose {
 		fmt.Println("refuel_stuck_jumpers.")
 	}
 
-	for _, node := range *all_nodes {
+	for _, node := range local_nodes {
 		jumper := node.jumper
 		//  This shall be done just for jumpers with an almost empty tank.
 		//  The main while loop in explore_path() has, at the point when this
@@ -96,9 +101,9 @@ func refuel_stuck_jumpers(all_nodes *map[string]Node) {
 
 // Just work with nodes that actually can send a jumper in the main while-loop
 // in explore_path(). This function finds these nodes.
-func get_nodes_that_can_send_jumpers(all_nodes *map[string]Node, this_distance int) []string {
+func get_nodes_that_can_send_jumpers(this_distance int) []string {
 	var starnames []string
-	for _, node := range *all_nodes {
+	for _, node := range local_nodes {
 		starname := node.name
 
 		var original_this_distance int = 0
@@ -111,7 +116,7 @@ func get_nodes_that_can_send_jumpers(all_nodes *map[string]Node, this_distance i
 				//  Minus one because < this_distance > starts counting at zero.
 				this_distance = len(node.reachable) - 1
 			}
-			_check_free_stars(all_nodes, &node, this_distance)
+			_check_free_stars(&node, this_distance)
 			if len(node.can_jump_to) != 0 {
 				starnames = append(starnames, starname)
 			}
@@ -129,7 +134,7 @@ func get_nodes_that_can_send_jumpers(all_nodes *map[string]Node, this_distance i
 }
 
 // This does all the above and finds a way from start to end (or not).
-func explore_path(all_nodes *map[string]Node, stars *[]Star, final_node_name string) {
+func explore_path(stars *[]Star, final_node_name string) {
 	if *verbose {
 		fmt.Println("explore_path()")
 	}
@@ -138,13 +143,10 @@ func explore_path(all_nodes *map[string]Node, stars *[]Star, final_node_name str
 	var this_distance int
 	//  See below why I have this. And yes, I know that it is actually "magic".
 	var magick_fuel bool = false
-	var j int = 0
 
-	var max_nodes = len(*all_nodes)
+	for !local_nodes[final_node_name].visited && this_distance < 10 {
 
-	for !(*all_nodes)[final_node_name].visited && j < max_nodes {
-		j++
-		starnames := get_nodes_that_can_send_jumpers(all_nodes, this_distance)
+		starnames := get_nodes_that_can_send_jumpers(this_distance)
 
 		// If no jump can take place with the given jump-distance ...
 		if len(starnames) == 0 {
@@ -164,12 +166,12 @@ func explore_path(all_nodes *map[string]Node, stars *[]Star, final_node_name str
 			//  to set the scoopable attribute of each node to True. Thus, I think
 			//  that this if-condition will never be triggered.
 			//  I keep it in case the above written ever changes.
-			if this_distance == len((*all_nodes)[final_node_name].reachable) && !magick_fuel {
+			if this_distance == len(local_nodes[final_node_name].reachable) && !magick_fuel {
 				magick_fuel = true
 				this_distance = 0
-				refuel_stuck_jumpers(all_nodes)
+				refuel_stuck_jumpers()
 			} else {
-				if this_distance == len((*all_nodes)[final_node_name].reachable) {
+				if this_distance == len(local_nodes[final_node_name].reachable) {
 					//  If no way can be found even with the largest boost range, and
 					//  even after ONE magick fuel event took place, break the loop.
 					break
@@ -190,7 +192,7 @@ func explore_path(all_nodes *map[string]Node, stars *[]Star, final_node_name str
 
 			for _, starname := range starnames {
 				var original_this_distance int = 0
-				node := (*all_nodes)[starname]
+				node := local_nodes[starname]
 
 				//  If neutron jumping is permitted, it shall always have
 				//  priority over all other jumps. That means that
@@ -202,7 +204,7 @@ func explore_path(all_nodes *map[string]Node, stars *[]Star, final_node_name str
 					this_distance = len(node.reachable) - 1
 				}
 
-				_send_jumpers(all_nodes, &node, this_distance)
+				_send_jumpers(starname, this_distance)
 
 				//  In case < this_distance > was changed due to a neutron
 				//  boosted jump, it needs to be set back to the original
@@ -210,6 +212,7 @@ func explore_path(all_nodes *map[string]Node, stars *[]Star, final_node_name str
 				if node.neutron {
 					this_distance = original_this_distance
 				}
+
 			}
 			//  If any jump took place, try first to do a regular jump afterwards.
 			this_distance = 0
@@ -290,14 +293,13 @@ func better_jumper(i int, max_tries int, jumper Jumper, data Data) Data {
 
 // This is the main loop, that will search for the shortest and for the most
 // economic path as often as < max_tries >.
-func find_path(max_tries int, stars *[]Star, start_star Star, end_star Star, pristine_nodes *map[string]Node, neutron_boosting bool) (*Jumper, *Jumper) {
+func find_path(max_tries int, stars *[]Star, start_star Star, end_star Star, neutron_boosting bool) (*Jumper, *Jumper) {
 	if *verbose {
 		fmt.Println("Finding a path.")
 	}
 
 	// This is just for the case that neutron boosting is allowed.
 	var way_back_jumper *Jumper
-	var all_nodes map[string]Node = make(map[string]Node, len(*pristine_nodes))
 
 	final_name := end_star.Name
 	var fewest_jumps_jumper *Jumper = new(Jumper)
@@ -314,30 +316,31 @@ func find_path(max_tries int, stars *[]Star, start_star Star, end_star Star, pri
 		// 	unvisited nodes for each loop.
 
 		// all_nodes = deepcopy(pristine_nodes)
-		for k, v := range *pristine_nodes {
-			all_nodes[k] = v
+		for k, v := range pristine_nodes {
+			local_nodes[k] = v
 		}
 
-		create_jumper_at_start(start_star, &all_nodes)
+		// Initiatize the first jumper at the start star, or else the algorithm doesn't work
+		local_nodes[start_star.Name] = create_jumper_at_start(start_star)
 
-		explore_path(&all_nodes, stars, final_name)
+		explore_path(stars, final_name)
 
 		var jumper *Jumper
-		if all_nodes[final_name].visited {
-			jumper = all_nodes[final_name].jumper
+		if local_nodes[final_name].visited {
+			jumper = local_nodes[final_name].jumper
 		} else {
 			jumper = nil
 		}
 
 		if jumper != nil && neutron_boosting && way_back_jumper != nil {
-			//  Since < all_nodes > is modified in explore_path I need to get the
+			//  Since < local_nodes > is modified in explore_path I need to get the
 			//  pristine nodes again.
 			// all_nodes = deepcopy(pristine_nodes)
-			for k, v := range *pristine_nodes {
-				all_nodes[k] = v
+			for k, v := range pristine_nodes {
+				local_nodes[k] = v
 			}
 
-			way_back_jumper = way_back(&all_nodes, stars, start_star, end_star)
+			way_back_jumper = way_back(stars, start_star, end_star)
 		}
 
 		if jumper != nil {
@@ -365,14 +368,14 @@ func find_path(max_tries int, stars *[]Star, start_star Star, end_star Star, pri
 // < all_nodes > are all pristine nodes
 // < start_star > and < end_star > are the _actual_ start and goal. The
 // switching will take place inside this function.
-func way_back(all_nodes *map[string]Node, stars *[]Star, start_star Star, end_star Star) *Jumper {
+func way_back(stars *[]Star, start_star Star, end_star Star) *Jumper {
 
-	create_jumper_at_start(end_star, all_nodes)
+	create_jumper_at_start(end_star)
 
-	explore_path(all_nodes, stars, start_star.Name)
+	explore_path(stars, start_star.Name)
 
-	if (*all_nodes)[start_star.Name].visited {
-		return (*all_nodes)[start_star.Name].jumper
+	if local_nodes[start_star.Name].visited {
+		return local_nodes[start_star.Name].jumper
 	} else {
 		return nil
 	}

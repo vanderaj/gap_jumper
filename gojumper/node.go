@@ -85,20 +85,17 @@ func initNode(node *Node, data Star, all_stars *[]Star) {
 }
 
 // This takes in all the star-data and creates node-objects.
-// < screen > is the instance of class ScreenWork() that calls this function.
-func create_nodes(stars *[]Star) map[string]Node {
+func create_nodes(stars *[]Star) {
 
-	all_nodes := make(map[string]Node, len(*stars))
+	local_nodes := make(map[string]Node, len(*stars))
 
 	for _, data := range *stars {
 		node := Node{}
 
 		// As Go doesn't have classes, we will call the functions individually, updating the node
 		initNode(&node, data, stars)
-		all_nodes[data.Name] = node
+		local_nodes[data.Name] = node
 	}
-
-	return all_nodes
 }
 
 // Creating these nodes takes A LOT of time if many nodes are to be created.
@@ -197,11 +194,11 @@ func _find_reachable_stars(node *Node, all_stars *[]Star) {
 
 // This method checks if the nearby stystems are free to jump to.
 // < this_distance > is the index of the list in self.reachable.
-func _check_free_stars(all_nodes *map[string]Node, self *Node, this_distance int) {
+func _check_free_stars(self *Node, this_distance int) {
 
 	(*self).can_jump_to = make([]string, 0)
 	for _, name := range self.reachable[this_distance] {
-		next_star := (*all_nodes)[name]
+		next_star := local_nodes[name]
 		if !next_star.visited {
 			// The following will never be triggered as of now, since the
 			// .scoopable attribute is set be default to True. However, this
@@ -212,7 +209,7 @@ func _check_free_stars(all_nodes *map[string]Node, self *Node, this_distance int
 			// comment above to self.scoopable).
 			if self.jumper.jumps_left == 1 && !next_star.scoopable {
 				// Check if a star is nearby to re-fill the tank.
-				if _refill_at_nearest_scoopable(all_nodes, self, name) {
+				if _refill_at_nearest_scoopable(self, name) {
 					self.jumper.jumps_left = self.jumper.max_jumps - 1
 					self.can_jump_to = append(self.can_jump_to, name)
 				}
@@ -247,9 +244,9 @@ func _check_free_stars(all_nodes *map[string]Node, self *Node, this_distance int
 // For the time being, the if-condition in _check_free_stars() which calls
 // this function will never be triggered, will this function also never be
 // used (see also comment in _check_free_stars()).
-func _refill_at_nearest_scoopable(all_nodes *map[string]Node, self *Node, point_of_origin string) bool {
+func _refill_at_nearest_scoopable(self *Node, point_of_origin string) bool {
 	for _, name := range (*self).reachable[0] {
-		next_star := (*all_nodes)[name]
+		next_star := local_nodes[name]
 		if next_star.scoopable {
 			self.jumper.scoop_stops = append(self.jumper.scoop_stops, point_of_origin) // tuple, unused at this point
 			self.jumper.scoop_stops = append(self.jumper.scoop_stops, name)
@@ -270,21 +267,24 @@ func _refill_at_nearest_scoopable(all_nodes *map[string]Node, self *Node, point_
 // node houses a jumper.
 // this is the heart of the algorithm to explore the network of stars to
 // find a route.
-func _send_jumpers(all_nodes *map[string]Node, self *Node, this_distance int) bool {
+func _send_jumpers(nodename string, this_distance int) bool {
 	// The .can_jump_to attribute is set when ._check_free_stars() is
 	// called in additional_functions.py => get_nodes_that_can_send_jumpers()
 	// which is called at the start of the while-loop in explore_path() in
 	// additional_functions.py.
-	for _, name := range (*self).can_jump_to {
+
+	self := local_nodes[nodename]
+
+	for _, name := range self.can_jump_to {
 		new_jumper := new(Jumper)
 		deepcopier.Copy(self.jumper).To(new_jumper)
 		new_jumper.visited_systems = append(new_jumper.visited_systems, name)
 		_add_jump_types(new_jumper, this_distance)
 
-		next_star := (*all_nodes)[name]
+		next_star := local_nodes[name]
 		next_star_data := next_star.data
 
-		distance := _star_distance(self, next_star_data)
+		distance := _star_distance(&self, next_star_data)
 		new_jumper.distances = append(new_jumper.distances, distance)
 
 		// Another condition that is of little use as long the information
@@ -297,7 +297,7 @@ func _send_jumpers(all_nodes *map[string]Node, self *Node, this_distance int) bo
 		next_star.jumper = new_jumper
 		next_star.visited = true
 
-		(*all_nodes)[name] = next_star
+		local_nodes[name] = next_star
 	}
 	return true
 }

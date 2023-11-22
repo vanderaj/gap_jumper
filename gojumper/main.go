@@ -50,7 +50,13 @@ import (
 
 const neutronfile = "neutron-stars.csv"
 
+// Global variables are aweful, but we need to pass these around a lot
+// and Go doesn't like to pass pointers to dynamic maps
+
 var jump_distances []float64 = make([]float64, 10)
+var pristine_nodes map[string]Node // Pristine copy that should not be changed
+var local_nodes map[string]Node    // Used for speculative path finding, will be overwritten
+var stars []Star
 
 func main() {
 	// Used to format numbers with locale specific separators.
@@ -107,7 +113,7 @@ func main() {
 	}
 
 	fmt.Println("Phase 1 - Reading stars")
-	var stars []Star
+
 	start := time.Now()
 	if *cached {
 		if *verbose {
@@ -185,16 +191,17 @@ func main() {
 	jump_distances[8] = *range_on_fumes * 2
 	jump_distances[9] = *jumprange * 4 // Neutron
 
-	all_nodes := create_nodes(&stars)
+	/* local_nodes = */
+	create_nodes(&stars)
 
-	// pristine_nodes := make(map[string]Node, len(all_nodes))
-	// // make a copy for later
-	// for k, v := range all_nodes {
-	// 	pristine_nodes[k] = v
-	// }
+	// take a copy of the pristine nodes for later use
+	pristine_nodes = make(map[string]Node, len(local_nodes))
+	for k, v := range local_nodes {
+		pristine_nodes[k] = v
+	}
 
 	if *verbose {
-		p.Printf("Created %d nodes in %s.\n", len(all_nodes), time.Since(start))
+		p.Printf("Created %d nodes in %s.\n", len(local_nodes), time.Since(start))
 	}
 
 	// 3. Find a path
@@ -203,7 +210,7 @@ func main() {
 	start_star, end_star := find_closest(&stars, startcoord, destcoord)
 
 	fewest_jumps_jumper, way_back_jumper := find_path(*max_tries, &stars,
-		start_star, end_star, &all_nodes, *neutron_boosting)
+		start_star, end_star, *neutron_boosting)
 
 	// 4. Print the results
 
