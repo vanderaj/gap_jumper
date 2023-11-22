@@ -136,11 +136,13 @@ func _star_distance(node *Node, second_star_data Star) float64 {
 // This function checks for if a star is within the box of reachable stars
 // around a given node. See also comment to _calculate_limits().
 func _in_box(node *Node, second_star_data Star) bool {
-	first := ((*node).x_lower < second_star_data.Star_coords.X) && (second_star_data.Star_coords.X < (*node).x_upper)
-	second := ((*node).y_lower < second_star_data.Star_coords.Y) && (second_star_data.Star_coords.Y < (*node).y_upper)
-	third := ((*node).z_lower < second_star_data.Star_coords.Z) && (second_star_data.Star_coords.Z < (*node).z_upper)
 
-	return first && second && third
+	return ((*node).x_lower < second_star_data.Star_coords.X) &&
+		(second_star_data.Star_coords.X < (*node).x_upper) &&
+		((*node).y_lower < second_star_data.Star_coords.Y) &&
+		(second_star_data.Star_coords.Y < (*node).y_upper) &&
+		((*node).z_lower < second_star_data.Star_coords.Z) &&
+		(second_star_data.Star_coords.Z < (*node).z_upper)
 }
 
 // # This function finds all stars within the range(s) of the starship in use.
@@ -195,7 +197,7 @@ func _find_reachable_stars(node *Node, all_stars *[]Star) {
 func _check_free_stars(self *Node, this_distance int) {
 
 	(*self).can_jump_to = make([]string, 0)
-	for _, name := range self.reachable[this_distance] {
+	for _, name := range (*self).reachable[this_distance] {
 		next_star := local_nodes[name]
 		if !next_star.visited {
 			// The following will never be triggered as of now, since the
@@ -204,27 +206,27 @@ func _check_free_stars(self *Node, this_distance int) {
 			// afterwards and the next star is unscoopable.
 			// If this information ever will be available for all systems in
 			// the EDSM database, it is automatically available (see also
-			// comment above to self.scoopable).
-			if self.jumper.jumps_left == 1 && !next_star.scoopable {
+			// comment above to (*self).scoopable).
+			if (*self).jumper != nil && (*self).jumper.jumps_left == 1 && !next_star.scoopable {
 				// Check if a star is nearby to re-fill the tank.
 				if _refill_at_nearest_scoopable(self, name) {
-					self.jumper.jumps_left = self.jumper.max_jumps - 1
-					self.can_jump_to = append(self.can_jump_to, name)
+					(*self).jumper.jumps_left = (*self).jumper.max_jumps - 1
+					(*self).can_jump_to = append((*self).can_jump_to, name)
 				}
 			} else {
 				// If (this_distance  + 1) is even it is a jump distance for jumping
 				// on fumes. In this case the next star needs to be scoopable
 				// because otherwise the jumper would strand there!
 				if (this_distance+1)%2 == 0 && next_star.scoopable {
-					self.jumper.jumps_left = 1
-					self.jumper.on_fumes = append(self.jumper.on_fumes, (*self).name)
-					self.jumper.on_fumes = append(self.jumper.on_fumes, next_star.name)
+					(*self).jumper.jumps_left = 1
+					(*self).jumper.on_fumes = append((*self).jumper.on_fumes, (*self).name)
+					(*self).jumper.on_fumes = append((*self).jumper.on_fumes, next_star.name)
 
 					this := fmt.Sprintf("On fumes jump from %s to %s", (*self).name, next_star.name)
-					self.jumper.notes = append(self.jumper.notes, this)
-					self.can_jump_to = append(self.can_jump_to, name)
+					(*self).jumper.notes = append((*self).jumper.notes, this)
+					(*self).can_jump_to = append((*self).can_jump_to, name)
 				} else {
-					self.can_jump_to = append(self.can_jump_to, name)
+					(*self).can_jump_to = append((*self).can_jump_to, name)
 				}
 			}
 		}
@@ -246,12 +248,12 @@ func _refill_at_nearest_scoopable(self *Node, point_of_origin string) bool {
 	for _, name := range (*self).reachable[0] {
 		next_star := local_nodes[name]
 		if next_star.scoopable {
-			self.jumper.scoop_stops = append(self.jumper.scoop_stops, point_of_origin) // tuple, unused at this point
-			self.jumper.scoop_stops = append(self.jumper.scoop_stops, name)
-			self.jumper.scoop_stops = append(self.jumper.scoop_stops, point_of_origin)
+			(*self).jumper.scoop_stops = append((*self).jumper.scoop_stops, point_of_origin) // tuple, unused at this point
+			(*self).jumper.scoop_stops = append((*self).jumper.scoop_stops, name)
+			(*self).jumper.scoop_stops = append((*self).jumper.scoop_stops, point_of_origin)
 
 			var note string = fmt.Sprintf("Refill needed at %s! Jump to %s and back to %s.", point_of_origin, name, point_of_origin)
-			self.jumper.notes = append(self.jumper.notes, note)
+			(*self).jumper.notes = append((*self).jumper.notes, note)
 
 			return true
 		}
@@ -277,7 +279,7 @@ func _send_jumpers(nodename string, this_distance int) bool {
 		new_jumper := new(Jumper)
 		deepcopier.Copy(self.jumper).To(new_jumper)
 		new_jumper.visited_systems = append(new_jumper.visited_systems, name)
-		_add_jump_types(new_jumper, this_distance)
+		new_jumper.jump_types = _add_jump_types(new_jumper, this_distance)
 
 		next_star := local_nodes[name]
 		next_star_data := next_star.data

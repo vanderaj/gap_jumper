@@ -66,7 +66,7 @@ func initJumper(jumper *Jumper, visited_systems []string, max_jumps int) {
 //
 //		For example, a jump of 4.5 light years would be indicated as "B0", whereas
 //	 a jump of 255 light years would be indicated as "neutron".
-func _add_jump_types(jumper *Jumper, this_distance int) {
+func _add_jump_types(jumper *Jumper, this_distance int) []string {
 
 	boost_type := int(this_distance / 2)
 	// The right hand expression evaluates to True or False, and yes, that
@@ -88,7 +88,7 @@ func _add_jump_types(jumper *Jumper, this_distance int) {
 		}
 	}
 
-	(*jumper).jump_types = append((*jumper).jump_types, jump_types)
+	return append((*jumper).jump_types, jump_types)
 }
 
 func roundFloat(val float64, precision uint) float64 {

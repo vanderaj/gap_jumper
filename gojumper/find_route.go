@@ -35,7 +35,7 @@ import (
 // A jumper needs to be initialized in the startnode.
 func create_jumper_at_start(start_star Star) Node {
 	if *verbose {
-		fmt.Println("create_jumper_at_start.")
+		fmt.Println("create_jumper_at_start()")
 	}
 	var jumper *Jumper = new(Jumper)
 	var visited []string = make([]string, 0)
@@ -101,6 +101,10 @@ func refuel_stuck_jumpers() {
 // Just work with nodes that actually can send a jumper in the main while-loop
 // in explore_path(). This function finds these nodes.
 func get_nodes_that_can_send_jumpers(this_distance int) []string {
+	// if *verbose {
+	// 	fmt.Println("get_nodes_that_can_send_jumpers()")
+	// }
+
 	var starnames []string
 	for _, node := range local_nodes {
 		starname := node.name
@@ -115,17 +119,19 @@ func get_nodes_that_can_send_jumpers(this_distance int) []string {
 				//  Minus one because < this_distance > starts counting at zero.
 				this_distance = len(node.reachable) - 1
 			}
+
 			_check_free_stars(&node, this_distance)
+			local_nodes[starname] = node
 			if len(node.can_jump_to) != 0 {
 				starnames = append(starnames, starname)
 			}
-		}
 
-		//  In case < this_distance > was changed due to a neutron
-		//  boosted jump, it needs to be set back to the original
-		//  value.
-		if node.neutron {
-			this_distance = original_this_distance
+			//  In case < this_distance > was changed due to a neutron
+			//  boosted jump, it needs to be set back to the original
+			//  value.
+			if node.neutron {
+				this_distance = original_this_distance
+			}
 		}
 	}
 
@@ -178,14 +184,13 @@ func explore_path(stars *[]Star, final_node_name string) {
 			}
 		} else {
 			//  I will run explore_path() to find the best way several time.
-			//  However, it seems that once the program is called, that certain
-			//  dict-related methods (e.g. .items()) return the items always in
-			//  the same order during the momentary call if the program.
-			//  Thus explore_path() will return always the same path.
-			//  This is avoided by shuffling.
+			// In Python, the order of the elements in a list is guaranteed to be
+			// the same. In go, it is not. Just in case this behavior ever changes
+			// I shuffle the list of starnames.
 
 			for i := range starnames {
 				j := rand.Intn(i + 1)
+				// swap starnames[i], starnames[j] (this is a Go primitive)
 				starnames[i], starnames[j] = starnames[j], starnames[i]
 			}
 
@@ -229,6 +234,9 @@ func explore_path(stars *[]Star, final_node_name string) {
 // the current loop uses less jumps or less boosts than the current best jumper.
 // < data > is a tuple that contains information from the previous jumps
 func better_jumper(i int, max_tries int, jumper Jumper, data Data) Data {
+	if *verbose {
+		fmt.Println("better_jumper()")
+	}
 	fewest_jumps_jumper := data.fewest_jumps_jumper
 	fewest_jumps := data.fewest_jumps
 
@@ -294,7 +302,7 @@ func better_jumper(i int, max_tries int, jumper Jumper, data Data) Data {
 // economic path as often as < max_tries >.
 func find_path(max_tries int, stars *[]Star, start_star Star, end_star Star, neutron_boosting bool) (*Jumper, *Jumper) {
 	if *verbose {
-		fmt.Println("Finding a path.")
+		fmt.Println("find_path()")
 	}
 
 	// This is just for the case that neutron boosting is allowed.
@@ -313,6 +321,8 @@ func find_path(max_tries int, stars *[]Star, start_star Star, end_star Star, neu
 	for i := 0; i < max_tries; i++ {
 		// 	After one loop all nodes are visited. Thus I need the "fresh",
 		// 	unvisited nodes for each loop.
+
+		fmt.Printf("\n\nTry #%d (of %d) to find a path ...\n", i+1, max_tries)
 
 		// all_nodes = deepcopy(pristine_nodes)
 		for k, v := range pristine_nodes {
@@ -345,7 +355,7 @@ func find_path(max_tries int, stars *[]Star, start_star Star, end_star Star, neu
 		if jumper != nil {
 			data = better_jumper(i, max_tries, *jumper, data)
 		} else {
-			fmt.Printf("Try %d of %d. Could NOT find a path.\n", i, max_tries)
+			fmt.Printf("Try %d of %d. Could NOT find a path.\n", i+1, max_tries)
 		}
 	}
 
@@ -368,7 +378,9 @@ func find_path(max_tries int, stars *[]Star, start_star Star, end_star Star, neu
 // < start_star > and < end_star > are the _actual_ start and goal. The
 // switching will take place inside this function.
 func way_back(stars *[]Star, start_star Star, end_star Star) *Jumper {
-
+	if *verbose {
+		fmt.Println("way_back()")
+	}
 	create_jumper_at_start(end_star)
 
 	explore_path(stars, start_star.Name)
