@@ -50,7 +50,7 @@ import (
 
 const neutronfile = "neutron-stars.csv"
 
-// Global variables are aweful, but we need to pass these around a lot
+// Global variables are awful, but we need to pass these around a lot
 // and Go doesn't like to pass pointers to dynamic maps
 
 var jump_distances []float64 = make([]float64, 10)
@@ -218,6 +218,12 @@ func main() {
 	p.Printf("Start at: %s\n", start_star.Name)
 	p.Printf("  End at: %s\n", end_star.Name)
 	p.Printf("\nNumber of stars considered: %d\n", len(stars))
+
+	p.Printf("\nFormat of results:\n")
+	p.Printf("< starname >   =>   < ly from previous star >")
+	p.Printf(" => < jumptype from previous star >\nFormat of jumptype:")
+	p.Printf("< B#(F) > with B = boosted, # = grade of boost, (F) = on fumes")
+	p.Printf("(displayed just if jump is on fumes)")
 
 	if *neutron_boosting {
 		p.Printf("\nATTENTION: Neutron boosted jumps are enabled BUT you need to make sure for yourself that you DON'T RUN OUT OF FUEL!\n")

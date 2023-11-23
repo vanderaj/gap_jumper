@@ -22,8 +22,6 @@ package main
 import (
 	"fmt"
 	"math"
-
-	"github.com/ulule/deepcopier"
 )
 
 // 	# < all_stars > is the dict that contains ALL stars-information, but it is
@@ -276,7 +274,7 @@ func _send_jumpers(nodename string, this_distance int) bool {
 
 	for _, name := range self.can_jump_to {
 		new_jumper := new(Jumper)
-		deepcopier.Copy(self.jumper).To(new_jumper)
+		*new_jumper = *self.jumper
 		new_jumper.visited_systems = append(new_jumper.visited_systems, name)
 		new_jumper.jump_types = _add_jump_types(new_jumper, this_distance)
 
