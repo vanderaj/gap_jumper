@@ -170,12 +170,11 @@ func _find_reachable_stars(node *Node, all_stars *[]Star) {
 		// jump distance for neutron boosted jumps.
 		if !(*node).data.Neutron && distance > jump_distances[8] { // further than a Premium fsd boost
 			continue
+		} else {
+			if distance > jump_distances[9] { // further than a neutron boost
+				continue
+			}
 		}
-
-		if (*node).data.Neutron && distance > jump_distances[9] { // further than a neutron boost
-			continue
-		}
-
 		// ATTENTION: self.jump_distances contains zero as the first
 		// element to make this if-condition possible. Thus it is ONE
 		// element longer (!) than self.reachable and ...

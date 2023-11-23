@@ -307,6 +307,7 @@ func find_path(max_tries int, stars *[]Star, start_star Star, end_star Star, neu
 
 	// This is just for the case that neutron boosting is allowed.
 	var way_back_jumper *Jumper
+	var jumper *Jumper
 
 	final_name := end_star.Name
 	var fewest_jumps_jumper *Jumper = new(Jumper)
@@ -334,7 +335,6 @@ func find_path(max_tries int, stars *[]Star, start_star Star, end_star Star, neu
 
 		explore_path(stars, final_name)
 
-		var jumper *Jumper
 		if local_nodes[final_name].visited {
 			jumper = local_nodes[final_name].jumper
 		} else {
@@ -359,7 +359,13 @@ func find_path(max_tries int, stars *[]Star, start_star Star, end_star Star, neu
 		}
 	}
 
-	fewest_jumps_jumper = data.fewest_jumps_jumper
+	if jumper != nil {
+		fmt.Printf("\n\nFinished finding a route. The results are shown below.\n")
+		fewest_jumps_jumper = data.fewest_jumps_jumper
+	} else {
+		fmt.Printf("\n\nFinished finding a route. No route could be found. Try a ship with a larger jumprange.\n")
+		fewest_jumps_jumper = nil
+	}
 
 	return fewest_jumps_jumper, way_back_jumper
 }
@@ -381,12 +387,14 @@ func way_back(stars *[]Star, start_star Star, end_star Star) *Jumper {
 	if *verbose {
 		fmt.Println("way_back()")
 	}
-	create_jumper_at_start(end_star)
 
-	explore_path(stars, start_star.Name)
+	final_name := start_star.Name
+	local_nodes[end_star.Name] = create_jumper_at_start(end_star)
 
-	if local_nodes[start_star.Name].visited {
-		return local_nodes[start_star.Name].jumper
+	explore_path(stars, final_name)
+
+	if local_nodes[final_name].visited {
+		return local_nodes[final_name].jumper
 	} else {
 		return nil
 	}

@@ -66,6 +66,10 @@ func main() {
 
 	get_arguments()
 
+	if *range_on_fumes == 0 {
+		*range_on_fumes = *jumprange + 0.01
+	}
+
 	if *verbose {
 		fmt.Println("jumprange: ", *jumprange)
 		fmt.Println("range_on_fumes: ", *range_on_fumes)
@@ -175,10 +179,6 @@ func main() {
 	fmt.Println("Phase 2 - Pathfinding Preparation")
 	start = time.Now()
 	// jump distances array
-
-	if *range_on_fumes == 0 {
-		*range_on_fumes = *jumprange + 0.01
-	}
 
 	jump_distances[0] = 0          // necessary for the algorithm to work
 	jump_distances[1] = *jumprange // Default
