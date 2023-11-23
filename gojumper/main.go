@@ -191,7 +191,6 @@ func main() {
 	jump_distances[8] = *range_on_fumes * 2
 	jump_distances[9] = *jumprange * 4 // Neutron
 
-	/* local_nodes = */
 	local_nodes = make(map[string]Node, len(stars))
 	create_nodes(&stars)
 
@@ -221,7 +220,7 @@ func main() {
 	p.Printf("\nNumber of stars considered: %d\n", len(stars))
 
 	if *neutron_boosting {
-		p.Printf("\nATTENTION: Neutron boosted jumps are enabled BUT you need to make sure for yourself that you DON'T RUN OUT OF FUEL!\n\n")
+		p.Printf("\nATTENTION: Neutron boosted jumps are enabled BUT you need to make sure for yourself that you DON'T RUN OUT OF FUEL!\n")
 	}
 
 	print_jumper_information(fewest_jumps_jumper)

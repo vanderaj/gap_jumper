@@ -227,8 +227,8 @@ func find_systems_offline() []Star {
 
 	var percent float64
 
-	// Make room for up to 79,600,000 stars, this should prevent a lot of re-allocing of the slice
-	stars := make([]Star, 0, 79600000)
+	// Make room for up to 10,000 stars, this should prevent a lot of re-allocing of the slice
+	stars := make([]Star, 0, 10000)
 
 	for scanner.Scan() {
 		text = scanner.Text()
