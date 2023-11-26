@@ -287,7 +287,7 @@ func _send_jumpers(nodename string, this_distance int) bool {
 		if next_star.scoopable {
 			new_jumper.jumps_left = new_jumper.max_jumps
 		} else {
-			new_jumper.jumps_left -= 1
+			new_jumper.jumps_left--
 		}
 		next_star.jumper = new_jumper
 		next_star.visited = true

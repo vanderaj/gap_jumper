@@ -14,3 +14,4 @@ systemsWithCoordinates.json
 systemsWithCoordinates.json.gz
 venv/*
 rsjumper/target/*
+target/*
