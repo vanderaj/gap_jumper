@@ -31,12 +31,22 @@
 // restrict your possibilities? 
 
 use std::io;
+use std::env;
 
-fn main() {
-    println!("Hello, world!");
+fn parse_args() {
+    let args: Vec<String> = env::args().collect();
+    
 }
 
+fn main() {
+    println!("rsjumper v0.1.0");
 
+    // Parse command line arguments
+
+    // 
+}
+
+/* 
 
 
 // Beginning of program execution when run from the command line
@@ -141,3 +151,5 @@ if __name__ == "__main__":
 		else:
 			print("\nYou will be able to get back. This is ONE possible way back.\n")
 			af.print_jumper_information(pristine_nodes, way_back_jumper)
+
+            */

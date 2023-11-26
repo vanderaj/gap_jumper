@@ -174,11 +174,11 @@ func _find_reachable_stars(node *Node, all_stars *[]Star) {
 		// ATTENTION: self.jump_distances contains zero as the first
 		// element to make this if-condition possible. Thus it is ONE
 		// element longer (!) than self.reachable and ...
-		slicelen := len(jump_distances) - 1
-		for i, d := range jump_distances[:slicelen] {
+
+		for i := 0; i < len(jump_distances)-1; i++ {
 			// ... the element with index (i + 1) in self.jump_distances
 			// corresponds to ...
-			if d <= distance && distance < jump_distances[i+1] {
+			if jump_distances[i] <= distance && distance < jump_distances[i+1] {
 				// ... element i in self.reachable.
 				(*node).reachable[i] = append((*node).reachable[i], data.Name)
 
