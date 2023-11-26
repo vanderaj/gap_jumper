@@ -207,10 +207,16 @@ func main() {
 	// 3. Find a path
 	fmt.Println("Phase 3 - Find a path")
 
+	start = time.Now()
+
 	start_star, end_star := find_closest(&stars, startcoord, destcoord)
 
 	fewest_jumps_jumper, way_back_jumper := find_path(*max_tries, &stars,
 		start_star, end_star, *neutron_boosting)
+
+	if *verbose {
+		p.Printf("find_path() ran in %s.\n", time.Since(start))
+	}
 
 	// 4. Print the results
 

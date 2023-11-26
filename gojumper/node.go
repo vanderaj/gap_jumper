@@ -72,7 +72,7 @@ func initNode(node *Node, data Star, all_stars *[]Star) {
 	// to a certain distance.
 	// self.jump_distances has zero as the very first element and is thus
 	// one element longer than self.reachable shall be.
-	(*node).reachable = make(map[int][]string, len(jump_distances))
+	(*node).reachable = make(map[int][]string, len(jump_distances)-1)
 
 	// See comment to _calculate_limits() what I'm doing here and why.
 	_calculate_limits(node)
@@ -121,8 +121,6 @@ func _calculate_limits(node *Node) {
 }
 
 // This calculates the distance to another star.
-// This is basically the same what is done in additional_functions.py =>
-// distance_to_point().
 func _star_distance(node *Node, second_star_data Star) float64 {
 	x_square := math.Pow(((*node).data.Star_coords.X - second_star_data.Star_coords.X), 2)
 	y_square := math.Pow(((*node).data.Star_coords.Y - second_star_data.Star_coords.Y), 2)

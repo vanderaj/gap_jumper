@@ -1,4 +1,5 @@
 __pycache__/*
+all_nodes
 gojumper/cpuprof
 gojumper/gojumper
 gojumper/gojumper.exe
@@ -7,11 +8,9 @@ gojumper/stars.json
 gojumper/systemsWithCoordinates.json
 gojumper/systemsWithCoordinates.json.gz
 neutron-stars.csv
+stars
 stars.json
 systemsWithCoordinates.json
 systemsWithCoordinates.json.gz
 venv/*
-gojumper/cpuprof
-all_nodes
-stars
-gojumper/cpuprof
+rsjumper/target/*

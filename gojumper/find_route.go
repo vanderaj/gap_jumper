@@ -306,7 +306,7 @@ func find_path(max_tries int, stars *[]Star, start_star Star, end_star Star, neu
 	}
 
 	// This is just for the case that neutron boosting is allowed.
-	var way_back_jumper *Jumper
+	var way_back_jumper *Jumper = new(Jumper)
 	var jumper *Jumper
 
 	final_name := end_star.Name

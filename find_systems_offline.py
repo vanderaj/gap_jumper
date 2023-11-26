@@ -256,25 +256,3 @@ def update_stars_with_neutrons(stars, neutron_stars):
 	for starname, data in stars.items():
 		if data['id'] in neutron_stars:
 			stars[starname]['neutron'] = True
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
