@@ -37,17 +37,15 @@ func create_jumper_at_start(start_star Star) Node {
 	if *verbose {
 		fmt.Println("create_jumper_at_start()")
 	}
-	var jumper *Jumper = new(Jumper)
+
 	var visited []string = make([]string, 0)
 	visited = append(visited, start_star.Name)
-
-	initJumper(jumper, visited, 4)
 
 	var entry Node
 	var ok bool
 
 	if entry, ok = local_nodes[start_star.Name]; ok {
-		entry.jumper = jumper
+		entry.jumper = initJumper(visited, 4)
 		entry.visited = true
 	}
 
@@ -75,8 +73,7 @@ func refuel_stuck_jumpers() {
 		fmt.Println("refuel_stuck_jumpers.")
 	}
 
-	for _, node := range local_nodes {
-		jumper := node.jumper
+	for k, node := range local_nodes {
 		//  This shall be done just for jumpers with an almost empty tank.
 		//  The main while loop in explore_path() has, at the point when this
 		//  function is called, already checked for each jumper and all
@@ -88,12 +85,13 @@ func refuel_stuck_jumpers() {
 		//  one.
 		//  < jumper >  should always exist, that is taken care of in
 		//  explore_path(). However, just in case I check for it.
-		if jumper != nil && (*jumper).jumps_left == 1 {
-			(*jumper).jumps_left = 2
-			(*jumper).magick_fuel_at = append((*jumper).magick_fuel_at, node.name)
+		if node.jumper.jumps_left == 1 {
+			node.jumper.jumps_left = 2
+			node.jumper.magick_fuel_at = append(node.jumper.magick_fuel_at, node.name)
 
 			this := fmt.Sprintf("ATTENTION: needed magick re-fuel at %s to be able to jump. You need to get there with at least 2 jumps left! Otherwise you are stuck at the next star!", node.name)
-			(*jumper).notes = append((*jumper).notes, this)
+			node.jumper.notes = append(node.jumper.notes, this)
+			local_nodes[k] = node
 		}
 	}
 }
@@ -110,7 +108,7 @@ func get_nodes_that_can_send_jumpers(this_distance int) []string {
 		starname := node.name
 
 		var original_this_distance int = 0
-		if node.jumper != nil {
+		if len(node.jumper.visited_systems) != 0 {
 			//  If neutron jumping is permitted, it shall always have priority
 			//  over all other jumps.
 			if node.neutron {
@@ -286,7 +284,7 @@ func better_jumper(i int, max_tries int, jumper Jumper, data Data) Data {
 
 	if most_better || medium_better || least_better || leastest_better {
 		fewest_jumps = number_jumps
-		fewest_jumps_jumper = &jumper
+		fewest_jumps_jumper = jumper
 	}
 
 	level_1_boosts = new_level_1_boosts
@@ -300,17 +298,19 @@ func better_jumper(i int, max_tries int, jumper Jumper, data Data) Data {
 
 // This is the main loop, that will search for the shortest and for the most
 // economic path as often as < max_tries >.
-func find_path(max_tries int, stars *[]Star, start_star Star, end_star Star, neutron_boosting bool) (*Jumper, *Jumper) {
+func find_path(max_tries int, stars *[]Star, start_star Star, end_star Star, neutron_boosting bool) (Jumper, Jumper) {
 	if *verbose {
 		fmt.Println("find_path()")
 	}
 
 	// This is just for the case that neutron boosting is allowed.
-	var way_back_jumper *Jumper = new(Jumper)
-	var jumper *Jumper
+	var way_back_jumper Jumper
+	var fewest_jumps_jumper Jumper
+
+	var jumper Jumper
 
 	final_name := end_star.Name
-	var fewest_jumps_jumper *Jumper = new(Jumper)
+
 	fewest_jumps := 99999
 	level_3_boosts := 99999
 	level_2_boosts := 99999
@@ -338,10 +338,10 @@ func find_path(max_tries int, stars *[]Star, start_star Star, end_star Star, neu
 		if local_nodes[final_name].visited {
 			jumper = local_nodes[final_name].jumper
 		} else {
-			jumper = nil
+			jumper = Jumper{}
 		}
 
-		if jumper != nil && neutron_boosting && way_back_jumper != nil {
+		if len(jumper.visited_systems) != 0 && neutron_boosting && len(way_back_jumper.visited_systems) != 0 {
 			//  Since < local_nodes > is modified in explore_path I need to get the
 			//  pristine nodes again.
 			// all_nodes = deepcopy(pristine_nodes)
@@ -352,19 +352,19 @@ func find_path(max_tries int, stars *[]Star, start_star Star, end_star Star, neu
 			way_back_jumper = way_back(stars, start_star, end_star)
 		}
 
-		if jumper != nil {
-			data = better_jumper(i, max_tries, *jumper, data)
+		if len(jumper.visited_systems) != 0 {
+			data = better_jumper(i, max_tries, jumper, data)
 		} else {
 			fmt.Printf("Try %d of %d. Could NOT find a path.\n", i+1, max_tries)
 		}
 	}
 
-	if jumper != nil {
+	if len(jumper.visited_systems) != 0 {
 		fmt.Printf("\n\nFinished finding a route. The results are shown below.\n")
 		fewest_jumps_jumper = data.fewest_jumps_jumper
 	} else {
 		fmt.Printf("\n\nFinished finding a route. No route could be found. Try a ship with a larger jumprange.\n")
-		fewest_jumps_jumper = nil
+		fewest_jumps_jumper = Jumper{}
 	}
 
 	return fewest_jumps_jumper, way_back_jumper
@@ -383,7 +383,7 @@ func find_path(max_tries int, stars *[]Star, start_star Star, end_star Star, neu
 // < all_nodes > are all pristine nodes
 // < start_star > and < end_star > are the _actual_ start and goal. The
 // switching will take place inside this function.
-func way_back(stars *[]Star, start_star Star, end_star Star) *Jumper {
+func way_back(stars *[]Star, start_star Star, end_star Star) Jumper {
 	if *verbose {
 		fmt.Println("way_back()")
 	}
@@ -396,6 +396,6 @@ func way_back(stars *[]Star, start_star Star, end_star Star) *Jumper {
 	if local_nodes[final_name].visited {
 		return local_nodes[final_name].jumper
 	} else {
-		return nil
+		return Jumper{}
 	}
 }

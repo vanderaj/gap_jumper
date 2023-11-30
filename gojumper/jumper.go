@@ -29,29 +29,34 @@ import (
 // be visited. This wil be the jump itself. Certain attributes of the new jumper
 // will be changed to accomodate for the fact that a jump took place.
 // class Jumper(object):
-func initJumper(jumper *Jumper, visited_systems []string, max_jumps int) {
+func initJumper(visited_systems []string, max_jumps int) Jumper {
+
+	var jumper Jumper = Jumper{}
+
 	// The list with all the systems visited by this jumper. This is what
 	// all the shebang is for.
-	(*jumper).visited_systems = visited_systems
+	jumper.visited_systems = visited_systems
 	// Number of jumps without re-fueling.
-	(*jumper).max_jumps = max_jumps
+	jumper.max_jumps = max_jumps
 	// This is the number of jumps "left in the tank" after a jump took place.
-	(*jumper).jumps_left = max_jumps
+	jumper.jumps_left = max_jumps
 	// Additional information. Was interesting during testing, but will
 	// not be delivered to the user (but it is easily available).
-	(*jumper).on_fumes = make([]string, 0)
-	(*jumper).scoop_stops = make([]string, 0)
-	(*jumper).notes = make([]string, 0)
+	jumper.on_fumes = make([]string, 0)
+	jumper.scoop_stops = make([]string, 0)
+	jumper.notes = make([]string, 0)
 	// See comment in additional_functions.py => explore_path() what
 	// this is about. And yes, i know that magick is written wrong.
-	(*jumper).magick_fuel_at = make([]string, 0)
+	jumper.magick_fuel_at = make([]string, 0)
 	// This list will contain what kind of jump was done, e.g., 'B1F' for a
 	// "grade 1 boosted jump on fumes". User visible
-	(*jumper).jump_types = make([]string, 0)
-	(*jumper).jump_types = append((*jumper).jump_types, "start")
+	jumper.jump_types = make([]string, 0)
+	jumper.jump_types = append(jumper.jump_types, "start")
 	// The distanced between the systems visited. User visible
-	(*jumper).distances = make([]float64, 0)
-	(*jumper).distances = append((*jumper).distances, 0)
+	jumper.distances = make([]float64, 0)
+	jumper.distances = append(jumper.distances, 0)
+
+	return jumper
 }
 
 //		In the output, the type of boost required for a jump is indicated by a
@@ -66,7 +71,7 @@ func initJumper(jumper *Jumper, visited_systems []string, max_jumps int) {
 //
 //		For example, a jump of 4.5 light years would be indicated as "B0", whereas
 //	 a jump of 255 light years would be indicated as "neutron".
-func _add_jump_types(jumper *Jumper, this_distance int) []string {
+func _add_jump_types(jumper Jumper, this_distance int) []string {
 
 	boost_type := int(this_distance / 2)
 	// The right hand expression evaluates to True or False, and yes, that
@@ -88,7 +93,7 @@ func _add_jump_types(jumper *Jumper, this_distance int) []string {
 		}
 	}
 
-	return append((*jumper).jump_types, jump_types)
+	return append(jumper.jump_types, jump_types)
 }
 
 func roundFloat(val float64, precision uint) float64 {
@@ -97,7 +102,7 @@ func roundFloat(val float64, precision uint) float64 {
 }
 
 // Just to print the complete path information in a pretty way.
-func pretty_print(jumper *Jumper) string {
+func pretty_print(jumper Jumper) string {
 	text := ""
 
 	vs := jumper.visited_systems
@@ -117,8 +122,8 @@ func pretty_print(jumper *Jumper) string {
 }
 
 // To print the information about the path in a good way.
-func print_jumper_information(fewest_jumps_jumper *Jumper) {
-	if fewest_jumps_jumper != nil {
+func print_jumper_information(fewest_jumps_jumper Jumper) {
+	if len(fewest_jumps_jumper.visited_systems) != 0 {
 		var neutron_boosts, level_3_boosts, level_2_boosts, level_1_boosts int
 
 		jump_types := fewest_jumps_jumper.jump_types

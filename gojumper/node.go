@@ -58,7 +58,7 @@ func initNode(node *Node, data Star, all_stars *[]Star) {
 	// node.jump_distances = jump_distances // Go version uses a global variable
 
 	// The jumper mentioned above. It will become later a class Jumper object.
-	(*node).jumper = nil
+	(*node).jumper = Jumper{}
 
 	// If a system was visited by a jumper it shall not be visited again.
 	// Actually this attribute is redundant, since if a system contains a
@@ -166,11 +166,11 @@ func _find_reachable_stars(node *Node, all_stars *[]Star) {
 		// jump distance for neutron boosted jumps.
 		if !(*node).data.Neutron && distance > jump_distances[8] { // further than a Premium fsd boost
 			continue
-		} else {
-			if distance > jump_distances[9] { // further than a neutron boost
-				continue
-			}
 		}
+		if distance > jump_distances[9] { // further than a neutron boost
+			continue
+		}
+
 		// ATTENTION: self.jump_distances contains zero as the first
 		// element to make this if-condition possible. Thus it is ONE
 		// element longer (!) than self.reachable and ...
@@ -202,7 +202,7 @@ func _check_free_stars(self *Node, this_distance int) {
 			// If this information ever will be available for all systems in
 			// the EDSM database, it is automatically available (see also
 			// comment above to (*self).scoopable).
-			if (*self).jumper != nil && (*self).jumper.jumps_left == 1 && !next_star.scoopable {
+			if len((*self).jumper.visited_systems) != 0 && (*self).jumper.jumps_left == 1 && !next_star.scoopable {
 				// Check if a star is nearby to re-fill the tank.
 				if _refill_at_nearest_scoopable(self, name) {
 					(*self).jumper.jumps_left = (*self).jumper.max_jumps - 1
@@ -271,8 +271,8 @@ func _send_jumpers(nodename string, this_distance int) bool {
 	self := local_nodes[nodename]
 
 	for _, name := range self.can_jump_to {
-		new_jumper := new(Jumper)
-		*new_jumper = *self.jumper
+		var new_jumper Jumper = self.jumper
+
 		new_jumper.visited_systems = append(new_jumper.visited_systems, name)
 		new_jumper.jump_types = _add_jump_types(new_jumper, this_distance)
 

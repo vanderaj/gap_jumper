@@ -237,7 +237,7 @@ func main() {
 
 	print_jumper_information(fewest_jumps_jumper)
 
-	if *neutron_boosting && way_back_jumper == nil {
+	if *neutron_boosting && len(way_back_jumper.visited_systems) == 0 {
 		p.Printf("\nATTENTION: Neutron jumping may allow you to get to your goal BUT no way back could be found.\nHowever, you may still be able to find a way manually since not all systems are registered in the database.\n")
 	} else {
 		print("\nYou will be able to get back. This is ONE possible way back.\n")

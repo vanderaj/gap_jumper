@@ -79,7 +79,7 @@ type Node struct {
 	visited     bool
 	can_jump_to []string
 	reachable   map[int][]string
-	jumper      *Jumper
+	jumper      Jumper
 	neutron     bool
 }
 type Jumper struct {
@@ -102,7 +102,7 @@ type Jumper struct {
 }
 
 type Data struct {
-	fewest_jumps_jumper *Jumper
+	fewest_jumps_jumper Jumper
 	fewest_jumps        int
 	level_3_boosts      int
 	level_2_boosts      int
