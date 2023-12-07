@@ -13,5 +13,5 @@ stars.json
 systemsWithCoordinates.json
 systemsWithCoordinates.json.gz
 venv/*
-rsjumper/target/*
-target/*
+csjumper/bin/*
+csjumper/obj/*
